@@ -48,7 +48,7 @@ export default function ApplyPage() {
               createOrder={(data, actions) => {
                 return actions.order.create({
                   purchase_units: [{
-                    amount: { value: "30.00" },
+                    amount: { value: "00.00" },
                     custom_id: `${caseId}:stage_1` // 关键：绑定 Case ID
                   }]
                 });
@@ -63,4 +63,5 @@ export default function ApplyPage() {
       </div>
     </div>
   );
+
 }
