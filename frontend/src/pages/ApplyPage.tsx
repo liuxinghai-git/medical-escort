@@ -11,13 +11,17 @@ export default function ApplyPage() {
   // 1. 先提交表单生成 Case ID
   const createCase = async () => {
     if(!form.email) return alert("Email required");
-    const res = await fetch(`${API_BASE_URL}/api/cases`, {
-      method: 'POST',
-      body: JSON.stringify(form)
-    });
-    const data = await res.json();
-    setCaseId(data.caseId);
-    return data.caseId;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      setCaseId(data.caseId);
+    } catch (e) {
+      alert("Error connecting to server. Please check your backend URL.");
+    }
   };
 
   return (
@@ -45,17 +49,28 @@ export default function ApplyPage() {
             </div>
             {/* Stage 1: 直接扣款 */}
             <PayPalButtons 
-              createOrder={(data, actions) => {
+              createOrder={(_data: any, actions: any) => {
                 return actions.order.create({
+                  intent: "CAPTURE", // 明确告诉 PayPal 我们要扣款
                   purchase_units: [{
-                    amount: { value: "30.00" },
-                    custom_id: `${caseId}:stage_1` // 关键：绑定 Case ID
+                    amount: { 
+                      currency_code: "USD",
+                      value: "30.00" 
+                    },
+                    custom_id: `${caseId}:stage_1`
                   }]
                 });
               }}
-              onApprove={async () => {
-                // 支付成功后跳转 Dashboard
-                navigate(`/dashboard/${caseId}`);
+              onApprove={async (_data: any, actions: any) => {
+                // 👇👇👇 关键修复：加上这行代码，钱才会真的划走！ 👇👇👇
+                try {
+                   await actions.order.capture();
+                   // 扣款成功后，才跳转
+                   navigate(`/dashboard/${caseId}`);
+                } catch (error) {
+                   console.error("Capture failed:", error);
+                   alert("Payment failed, please try again.");
+                }
               }}
             />
           </div>
@@ -63,6 +78,4 @@ export default function ApplyPage() {
       </div>
     </div>
   );
-
 }
-
