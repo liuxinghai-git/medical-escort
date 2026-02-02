@@ -3,7 +3,7 @@ import ApplyPage from './pages/ApplyPage';
 import DashboardPage from './pages/DashboardPage';
 
 // ⚠️ 部署后端后，这里替换为后端 URL (例如 https://api.onrender.com)
-export const API_BASE_URL = "https://medical-escort.onrender.com"; 
+export const API_BASE_URL = "https://backend.bigsea0922.workers.dev"; 
 
 function App() {
   return (
