@@ -62,7 +62,7 @@ export default function ApplyPage() {
                 });
               }}
               onApprove={async (_data: any, actions: any) => {
-                // 👇👇👇 关键修复：加上这行代码，钱才会真的划走！ 👇👇👇
+                // 关键修复：加上这行代码，钱才会真的划走！ 
                 try {
                    await actions.order.capture();
                    // 扣款成功后，才跳转
@@ -79,3 +79,4 @@ export default function ApplyPage() {
     </div>
   );
 }
+
