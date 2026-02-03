@@ -11,7 +11,20 @@ type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>()
 
 // 1. 允许跨域
-app.use('/*', cors({ origin: '*' }))
+//app.use('/*', cors({ origin: '*' }))
+// 文件路径: backend/src/index.ts
+
+// 找到 app.use 的地方，把 cors 配置改成下面这样：
+app.use('/*', cors({
+  // 生产环境应该精确到前端地址，但在 MVP 阶段，
+  // 我们需要确保 PayPal 能进来，所以先用 * 兜底
+  origin: '*',
+  allowHeaders: ['Content-Type', 'Authorization'],
+  // 必须明确允许 POST 方法，特别是针对 Webhook
+  allowMethods: ['POST', 'GET', 'OPTIONS'],
+  maxAge: 600,
+  credentials: true,
+}))
 
 // 工具：获取数据库连接
 const getSupabase = (c: any) => createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_KEY)
