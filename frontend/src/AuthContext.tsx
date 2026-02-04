@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase, Session, User } from './supabaseClient'; // ⬅️ 从你自己的文件里导入
+//import { supabase } from './supabaseClient';
 //import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -83,3 +84,4 @@ export const useAuth = () => {
   return context;
 
 };
+
