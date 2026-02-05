@@ -1,5 +1,7 @@
 //import { createClient } from '@supabase/supabase-js';
-import { createClient, Session, User } from '@supabase/supabase-js'; // ⬅️ 从这里引入 Session 和 User
+//import { createClient, Session, User } from '@supabase/supabase-js'; // ⬅️ 从这里引入 Session 和 User
+import { createClient } from '@supabase/supabase-js'; 
+import { Session, User } from '@supabase/supabase-js'; 
 
 // 从 VITE 环境变量中读取配置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -12,3 +14,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type { Session, User }; // 导出类型供 AuthContext 使用
+
