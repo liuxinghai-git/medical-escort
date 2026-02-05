@@ -1,7 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase, Session, User } from './supabaseClient'; // ⬅️ 从你自己的文件里导入
-//import { supabase } from './supabaseClient';
-//import { Session, User } from '@supabase/supabase-js';
+import { supabase, Session, User } from './supabaseClient';
 
 interface AuthContextType {
   session: Session | null;
@@ -19,18 +17,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. 初始化检查 Session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session) fetchUserProfile(session.user);
+      
+      if (session) {
+        // 如果已登录，去获取用户角色
+        fetchUserProfile(session.user);
+      } else {
+        // ⬇️⬇️⬇️ 关键修复：如果没有登录，也要停止 Loading！ ⬇️⬇️⬇️
+        setLoading(false); 
+      }
     });
 
+    // 2. 监听登录状态变化
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session) fetchUserProfile(session.user);
-        else setRole(null);
+        
+        if (session) {
+          fetchUserProfile(session.user);
+        } else {
+          setRole(null);
+          // ⬇️⬇️⬇️ 关键修复：登出时也要停止 Loading ⬇️⬇️⬇️
+          setLoading(false);
+        }
       }
     );
 
@@ -45,26 +58,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', currentUser.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') throw error; // 忽略找不到 profile 的错误
+      if (error && error.code !== 'PGRST116') throw error;
       
-      if (data && data.role) {
-        setRole(data.role as 'user' | 'admin');
-      } else {
-        setRole('user'); // 默认角色
-      }
+      setRole(data?.role as 'user' | 'admin' || 'user');
     } catch (error) {
       console.error("Error fetching user role:", error);
       setRole('user');
     } finally {
+      // 无论成功失败，都要停止 Loading
       setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">...</svg>
-        <span className='ml-3 text-lg text-gray-700'>Loading Session...</span>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+            {/* 一个简单的加载动画 */}
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <span className='text-lg text-gray-600 font-medium'>Loading Session...</span>
+        </div>
       </div>
     );
   }
@@ -82,6 +95,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-
 };
-
