@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
-    "@supabase/supabase-js": "^2.x.x",  // <--- 必须在这里！
+    "@supabase/supabase-js": "^2.x.x",  
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
