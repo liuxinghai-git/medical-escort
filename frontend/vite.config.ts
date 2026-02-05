@@ -1,26 +1,32 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import { nodeResolve } from '@rollup/plugin-node-resolve'; // 引入这个库，解决 Node.js 模块导入问题
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+// 引入这个库，虽然这次不一定用它，但保证配置的完整性
+import { nodeResolve } from '@rollup/plugin-node-resolve'; 
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   build: {
-    // ⬇️⬇️⬇️ 关键修改在这里 ⬇️⬇️⬇️
     rollupOptions: {
       plugins: [
-        // 这行可以帮助 Rollup 找到 node_modules 里的路径
         nodeResolve({
           browser: true,
           preferBuiltins: false
         })
       ],
-      // 告诉 Rollup 不要打包这两个库，让浏览器自己处理 (这是最终解决方案)
+      // 仍然保持 external，告诉 Rollup 这是外部库
       external: [
         '@supabase/supabase-js', 
         '@supabase/auth-ui-react'
       ],
     },
-    // ⬆️⬆️⬆️ 关键修改在这里 ⬆️⬆️⬆️
   },
-})
+  // ⬇️⬇️⬇️ 关键新增：强制 Vite 预编译这些依赖 ⬇️⬇️⬇️
+  optimizeDeps: {
+    include: [
+      '@supabase/supabase-js',
+      '@supabase/auth-ui-react'
+    ]
+  }
+  // ⬆️⬆️⬆️ 关键新增：强制 Vite 预编译这些依赖 ⬆️⬆️⬆️
+});
