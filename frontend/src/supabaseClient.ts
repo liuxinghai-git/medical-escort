@@ -4,8 +4,10 @@
 //import { Session, User } from '@supabase/supabase-js'; 
 // ⬇️⬇️⬇️ 关键修改在这里 ⬇️⬇️⬇️
 // 运行时会加载这个库，但不会在打包时尝试解析其内部结构
-const { createClient, Session, User } = await import('@supabase/supabase-js');
+//const { createClient, Session, User } = await import('@supabase/supabase-js');
 // ⬆️⬆️⬆️ 关键修改在这里 ⬆️⬆️⬆️
+const { createClient } = require('@supabase/supabase-js');
+const { Session, User } = require('@supabase/supabase-js');
 
 // 从 VITE 环境变量中读取配置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -18,5 +20,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type { Session, User }; // 导出类型供 AuthContext 使用
+
 
 
