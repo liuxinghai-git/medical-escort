@@ -1,25 +1,19 @@
-//import { createClient } from '@supabase/supabase-js';
-//import { createClient, Session, User } from '@supabase/supabase-js'; // ⬅️ 从这里引入 Session 和 User
-//import { createClient } from '@supabase/supabase-js'; 
-//import { Session, User } from '@supabase/supabase-js'; 
-// ⬇️⬇️⬇️ 关键修改在这里 ⬇️⬇️⬇️
-// 运行时会加载这个库，但不会在打包时尝试解析其内部结构
-//const { createClient, Session, User } = await import('@supabase/supabase-js');
-// ⬆️⬆️⬆️ 关键修改在这里 ⬆️⬆️⬆️
-const { createClient } = require('@supabase/supabase-js');
-const { Session, User } = require('@supabase/supabase-js');
+// 文件路径: frontend/src/supabaseClient.ts
+
+import { createClient } from '@supabase/supabase-js'; 
+import type { Session, User } from '@supabase/supabase-js'; // ⬅️ 导入类型用 type 关键字
 
 // 从 VITE 环境变量中读取配置
+// VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY 必须在 Cloudflare Pages 变量中设置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  // 避免运行时崩溃
   throw new Error("Supabase URL or Anon Key is missing from VITE environment variables.");
 }
 
-
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-export type { Session, User }; // 导出类型供 AuthContext 使用
 
-
-
+// 导出类型供 AuthContext 使用
+export type { Session, User };
