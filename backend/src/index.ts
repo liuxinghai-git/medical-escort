@@ -67,6 +67,62 @@ app.get('/api/cases/:id', async (c) => {
   return c.json(data)
 })
 
+/**
+ * --- 新增：管理员获取所有订单 ---
+ */
+app.get('/api/admin/all-cases', async (c) => {
+  const supabase = getSupabase(c)
+  
+  // 查询所有订单，按时间倒序排列
+  const { data, error } = await supabase
+    .from('cases')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    return c.json({ error: error.message }, 500)
+  }
+  
+  return c.json(data)
+})
+
+/**
+ * --- 新增：管理员释放资金 (Capture) ---
+ */
+app.post('/api/admin/release-funds', async (c) => {
+  const supabase = getSupabase(c)
+  const { caseId, authorizationId } = await c.req.json()
+
+  // 这里应该调用 PayPal API 进行 Capture (为了 MVP 简化，我们先只更新数据库状态)
+  // 实际生产中，你需要在这里 fetch PayPal 的 v2/payments/authorizations/{id}/capture 接口
+
+  // 更新数据库
+  const { error } = await supabase
+    .from('cases')
+    .update({ stage2_status: 'captured' })
+    .eq('id', caseId)
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ status: 'success', message: 'Funds Captured (Simulated)' })
+})
+
+/**
+ * --- 新增：管理员退款 (Void) ---
+ */
+app.post('/api/admin/void-funds', async (c) => {
+  const supabase = getSupabase(c)
+  const { caseId, authorizationId } = await c.req.json()
+
+  // 更新数据库
+  const { error } = await supabase
+    .from('cases')
+    .update({ stage2_status: 'voided' })
+    .eq('id', caseId)
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ status: 'success', message: 'Funds Voided (Simulated)' })
+})
+
 // --- Webhook 核心逻辑 (PayPal 通知) ---
 app.post('/api/webhooks/paypal', async (c) => {
   const supabase = getSupabase(c)
