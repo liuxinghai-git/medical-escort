@@ -135,7 +135,7 @@ app.post('/api/webhooks/paypal', async (c) => {
 
 /**
  * 管理员 API
- */
+ 
 app.get('/api/admin/all-cases', async (c) => {
   const { data, error } = await getSupabase(c).from('cases').select('*').order('created_at', { ascending: false })
   if (error) return c.json({ error: error.message }, 500)
@@ -154,6 +154,56 @@ app.post('/api/admin/void-funds', async (c) => {
   const { error } = await getSupabase(c).from('cases').update({ stage2_status: 'voided', status: 'refunded' }).eq('id', caseId)
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ status: 'success' })
+})*/
+
+// --- 管理员 API 增强版 ---
+
+// 1. 获取所有订单 (保持不变)
+app.get('/api/admin/all-cases', async (c) => {
+  const { data, error } = await getSupabase(c).from('cases').select('*').order('created_at', { ascending: false })
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data)
+})
+
+// 2. 人工确认 Stage 1 付款 ($30)
+app.post('/api/admin/confirm-stage1', async (c) => {
+  const { caseId } = await c.req.json()
+  const { error } = await getSupabase(c).from('cases')
+    .update({ stage1_paid: true, status: 'pending_stage2' })
+    .eq('id', caseId)
+  return error ? c.json({ error: error.message }, 500) : c.json({ status: 'success' })
+})
+
+// 3. 🚨 新增：人工确认 Stage 2 托管完成 ($100)
+// 当 Webhook 没通时，管理员在 PayPal 看到钱被授权后，点这个按钮
+app.post('/api/admin/confirm-stage2', async (c) => {
+  const { caseId, paypalAuthId } = await c.req.json()
+  const { error } = await getSupabase(c).from('cases')
+    .update({ 
+      stage2_status: 'authorized', 
+      stage2_auth_id: paypalAuthId || 'MANUAL_ENTRY', // 存入交易号
+      status: 'escrow_secured' 
+    })
+    .eq('id', caseId)
+  return error ? c.json({ error: error.message }, 500) : c.json({ status: 'success' })
+})
+
+// 4. 成功挂号：扣除资金 (Capture)
+app.post('/api/admin/capture-stage2', async (c) => {
+  const { caseId } = await c.req.json()
+  const { error } = await getSupabase(c).from('cases')
+    .update({ stage2_status: 'captured', status: 'completed' })
+    .eq('id', caseId)
+  return error ? c.json({ error: error.message }, 500) : c.json({ status: 'success' })
+})
+
+// 5. 挂号失败：释放退款 (Void)
+app.post('/api/admin/void-stage2', async (c) => {
+  const { caseId } = await c.req.json()
+  const { error } = await getSupabase(c).from('cases')
+    .update({ stage2_status: 'voided', status: 'refunded' })
+    .eq('id', caseId)
+  return error ? c.json({ error: error.message }, 500) : c.json({ status: 'success' })
 })
 
 export default app
