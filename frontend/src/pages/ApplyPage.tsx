@@ -1,184 +1,165 @@
-//import React, { useState } from 'react';
-import React, { useState, useEffect } from 'react';
-import { PayPalButtons } from "@paypal/react-paypal-js";
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PayPalButtons } from "@paypal/react-paypal-js";
+import { Camera, CheckCircle2, MapPin, Hospital, Stethoscope, Loader2 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 import { cities, hospitalData } from '../data/hospitalData';
 import { useAuth } from '../AuthContext';
-import { supabase } from '../supabaseClient'; // 确保引入了 supabase 客户端
-import { Camera, Upload, Loader2 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
 export default function ApplyPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: user?.email || '', city: cities[0], hospital: hospitalData[cities[0]][0], symptoms: '' });
+  
+  // 表单状态
+  const [form, setForm] = useState({
+    name: '',
+    email: user?.email || '',
+    city: cities[0],
+    hospital: hospitalData[cities[0]][0],
+    symptoms: ''
+  });
+
   const [passportFile, setPassportFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [caseId, setCaseId] = useState<string | null>(null);
 
-    useEffect(() => {
-    if (user && !form.email) {
-        setForm(prev => ({ ...prev, email: user.email! }));
+  const handleCityChange = (city: string) => {
+    setForm({ ...form, city, hospital: hospitalData[city][0] });
+  };
+
+  const handleApply = async () => {
+    if (!form.name || !form.symptoms || !passportFile) {
+      return alert("Please complete all fields and upload passport photo.");
     }
-  }, [user]);
-  
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCity = e.target.value;
-    setForm(prev => ({
-      ...prev,
-      city: newCity,
-      hospital: hospitalData[newCity][0] // 城市改变，医院列表重置为第一个
-    }));
-  };
 
-   // --- 核心上传函数 ---
-  const uploadPassport = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${user?.id}/${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from('passports')
-      .upload(filePath, file);
-
-    if (error) throw error;
-
-    // 获取公开访问链接
-    const { data: { publicUrl } } = supabase.storage
-      .from('passports')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
-  // 1. 先提交表单生成 Case ID
-   const createCase = async () => {
-    if (!form.name || !passportFile) return alert("Please fill name and take a photo of your passport");
-    
-    setUploading(true);
+    setIsUploading(true);
     try {
-      // 1. 先上传护照照片
-      const passportUrl = await uploadPassport(passportFile);
+      // 1. 上传护照照片
+      const fileExt = passportFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('passports')
+        .upload(`${user?.id}/${fileName}`, passportFile);
 
-      // 2. 将 URL 连同表单一起发给后端
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('passports').getPublicUrl(`${user?.id}/${fileName}`);
+
+      // 2. 创建订单
       const res = await fetch(`${API_BASE_URL}/api/cases`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, passport_url: passportUrl })
+        body: JSON.stringify({ ...form, passport_url: publicUrl })
       });
       const data = await res.json();
       setCaseId(data.caseId);
-    } catch (e: any) {
-      alert("Error: " + e.message);
+    } catch (e) {
+      alert("Submission failed. Please try again.");
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg">
-        <h1 className="text-2xl font-bold mb-6 text-blue-600">Step 1: Registration Info</h1>
-        
+    <div className="min-h-screen bg-slate-50 py-12 px-6">
+      <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
+        <div className="bg-slate-900 p-8 text-white">
+          <h2 className="text-2xl font-bold flex items-center">
+            <Stethoscope className="mr-3 text-blue-400" />
+            Medical Registration
+          </h2>
+          <p className="text-slate-400 text-sm mt-2 font-medium uppercase tracking-wider">Phase 1: Information Gathering</p>
+        </div>
+
         {!caseId ? (
-          <div className="space-y-4">
-            {/* ... 之前的姓名、城市、医院、病情输入框 ... */}
-            {/* 城市选择 */}
+          <div className="p-8 space-y-8">
+            {/* 1. 城市选择 - 药丸样式按钮 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Target City</label>
-              <select 
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
-                value={form.city}
-                onChange={handleCityChange}
-              >
-                {cities.map(city => <option key={city} value={city}>{city}</option>)}
-              </select>
+              <label className="block text-xs font-black text-slate-400 uppercase mb-3">Target City</label>
+              <div className="flex space-x-3">
+                {cities.map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => handleCityChange(c)}
+                    className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${form.city === c ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
+                  >
+                    <MapPin className="w-4 h-4 inline mr-1"/> {c}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* 医院选择 */}
+            {/* 2. 医院选择 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Preferred Hospital</label>
-              <select 
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
-                value={form.hospital}
-                onChange={e => setForm({...form, hospital: e.target.value})}
-              >
-                {hospitalData[form.city]?.map(hospital => (
-                    <option key={hospital} value={hospital}>{hospital}</option>
-                ))}
-              </select>
+              <label className="block text-xs font-black text-slate-400 uppercase mb-3">Preferred Hospital</label>
+              <div className="relative">
+                <Hospital className="absolute left-3 top-3.5 w-5 h-5 text-slate-300" />
+                <select 
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 appearance-none font-medium"
+                  value={form.hospital}
+                  onChange={(e) => setForm({...form, hospital: e.target.value})}
+                >
+                  {hospitalData[form.city].map(h => <option key={h}>{h}</option>)}
+                </select>
+              </div>
             </div>
-             <input placeholder="Full Name" className="w-full border p-2 rounded" 
-              onChange={e => setForm({...form, name: e.target.value})} />
-            <input placeholder="Email" type="email" className="w-full border p-2 rounded" 
-              onChange={e => setForm({...form, email: e.target.value})} />
-            <textarea placeholder="Brief Symptoms" className="w-full border p-2 rounded" 
-              onChange={e => setForm({...form, symptoms: e.target.value})} />
-            
-            {/* 📸 护照上传组件 */}
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
-              <label className="cursor-pointer block">
+
+            {/* 3. 基础信息 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">Patient Full Name</label>
+                  <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="As per passport" 
+                    onChange={e => setForm({...form, name: e.target.value})} />
+               </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">Current Symptoms</label>
+                  <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Brief description" 
+                    onChange={e => setForm({...form, symptoms: e.target.value})} />
+               </div>
+            </div>
+
+            {/* 4. 护照拍照 */}
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-400 uppercase">Passport Info Page</label>
+              <label className={`block border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${passportFile ? 'border-green-400 bg-green-50' : 'border-slate-200 hover:bg-slate-50'}`}>
                 {passportFile ? (
-                  <div className="space-y-2">
-                    <img src={URL.createObjectURL(passportFile)} className="h-32 mx-auto rounded shadow" alt="Passport Preview" />
-                    <p className="text-sm text-green-600 font-bold">Passport Photo Captured!</p>
+                  <div className="text-green-600 font-bold flex items-center justify-center">
+                    <CheckCircle2 className="mr-2" /> Photo Ready
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <Camera className="w-12 h-12 mx-auto text-slate-400" />
-                    <p className="text-sm font-medium text-slate-600">Take a Photo of Passport Information Page</p>
-                    <p className="text-xs text-slate-400">Required for hospital registration</p>
-                  </div>
+                  <>
+                    <Camera className="mx-auto w-10 h-10 text-slate-300 mb-2" />
+                    <span className="text-sm font-bold text-slate-500">Tap to take a photo of your passport</span>
+                  </>
                 )}
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  capture="environment" // 🚨 关键：在手机上直接唤起相机
-                  className="hidden" 
-                  onChange={(e) => setPassportFile(e.target.files?.[0] || null)}
-                />
+                <input type="file" accept="image/*" capture="environment" className="hidden" 
+                  onChange={(e) => setPassportFile(e.target.files?.[0] || null)} />
               </label>
             </div>
 
             <button 
-              onClick={createCase} 
-              disabled={uploading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold flex justify-center items-center"
+              onClick={handleApply}
+              disabled={isUploading}
+              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center"
             >
-              {uploading ? <Loader2 className="animate-spin mr-2" /> : null}
-              Submit Assessment ($30)
+              {isUploading ? <Loader2 className="animate-spin mr-2"/> : null}
+              PROCEED TO ASSESSMENT ($30)
             </button>
           </div>
         ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4">
-            <div className="bg-green-50 text-green-700 p-4 rounded-lg mb-6 text-sm">
-              Info & Passport saved. Final step: Pay the assessment fee.
+          <div className="p-8 text-center animate-in fade-in slide-in-from-bottom-4">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={40} />
             </div>
-            {/* Stage 1: 直接扣款 */}
+            <h3 className="text-2xl font-bold mb-2">Registration Saved!</h3>
+            <p className="text-slate-500 mb-8">Please complete the initial service fee payment to start the process.</p>
             <PayPalButtons 
-              createOrder={(_data: any, actions: any) => {
-                return actions.order.create({
-                  intent: "CAPTURE", // 明确告诉 PayPal 我们要扣款
-                  purchase_units: [{
-                    amount: { 
-                      currency_code: "USD",
-                      value: "30.00" 
-                    },
-                    custom_id: `${caseId}:stage_1`
-                  }]
-                });
-              }}
-              onApprove={async (_data: any, actions: any) => {
-                // 关键修复：加上这行代码，钱才会真的划走！ 
-                try {
-                   await actions.order.capture();
-                   // 扣款成功后，才跳转
-                   navigate(`/dashboard/${caseId}`);
-                } catch (error) {
-                   console.error("Capture failed:", error);
-                   alert("Payment failed, please try again.");
-                }
-              }}
+              createOrder={(data, actions) => actions.order.create({
+                intent: "CAPTURE",
+                purchase_units: [{ amount: { currency_code: "USD", value: "30.00" }, custom_id: `${caseId}:stage_1` }]
+              })}
+              onApprove={async () => navigate(`/dashboard/${caseId}`)}
             />
           </div>
         )}
@@ -186,7 +167,3 @@ export default function ApplyPage() {
     </div>
   );
 }
-
-
-
-
