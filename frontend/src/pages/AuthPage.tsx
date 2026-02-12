@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { LogIn, UserPlus } from 'lucide-react';
-import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, ShieldCheck, Activity, Smartphone, Mail, Lock, Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,82 +9,120 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { role } = useAuth();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    let error = null;
 
-    if (isLogin) {
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-      error = loginError;
-    } else {
-      const { error: registerError } = await supabase.auth.signUp({ email, password });
-      error = registerError;
-    }
+    const { error } = isLogin 
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { emailRedirectTo: window.location.origin } 
+        });
 
     if (error) {
-      alert(`Error: ${error.message}`);
-    } else if (isLogin) {
-        // 登录成功后，Context会自行更新，并决定跳转
-        if (role === 'admin') navigate('/admin');
-        else navigate('/');
+      alert("Error: " + error.message);
     } else {
-      alert("Registration successful! Please check your email for confirmation.");
+      if (isLogin) {
+        navigate('/');
+      } else {
+        alert("Registration success! Please check your email for the confirmation link.");
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
-        </h1>
-        
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g. yourname@gmail.com"
-            />
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      {/* 左侧：品牌背书区 */}
+      <div className="hidden md:flex md:w-1/2 bg-blue-600 p-12 flex-col justify-between text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full -mr-32 -mt-32 opacity-50"></div>
+        <div className="z-10">
+          <div className="flex items-center space-x-2 text-2xl font-black italic tracking-tighter mb-12">
+            <Activity className="w-8 h-8" />
+            <span>CHINAMED CONCIERGE</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Minimum 6 characters"
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Processing...' : isLogin ? 'Log In' : 'Sign Up'}
-            {isLogin ? <LogIn className='w-5 h-5 ml-2'/> : <UserPlus className='w-5 h-5 ml-2'/>}
-          </button>
-        </form>
+          <h2 className="text-4xl font-bold leading-tight mb-6">
+            Access China's Top-tier <br/> Medical Experts with Ease.
+          </h2>
+          <ul className="space-y-4">
+            <li className="flex items-center space-x-3 text-blue-100">
+              <ShieldCheck className="w-5 h-5 text-green-400" />
+              <span>Verified Escrow Payment Protection</span>
+            </li>
+            <li className="flex items-center space-x-3 text-blue-100">
+              <ShieldCheck className="w-5 h-5 text-green-400" />
+              <span>Direct Booking in Beijing & Shanghai</span>
+            </li>
+          </ul>
+        </div>
+        <div className="z-10 text-sm text-blue-200">
+          Trusted by 500+ international patients annually.
+        </div>
+      </div>
 
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-          >
-            {isLogin ? "Need an account? Sign Up" : "Already have an account? Log In"}
-          </button>
+      {/* 右侧：表单区 */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-black text-slate-900 mb-2">
+              {isLogin ? 'Sign In' : 'Create Account'}
+            </h1>
+            <p className="text-slate-500 text-sm">
+              {isLogin ? 'Manage your medical requests and payments' : 'Join us to access professional medical assistance'}
+            </p>
+          </div>
+
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input 
+                  type="email" required placeholder="Email Address"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <input 
+                  type="password" required placeholder="Password"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {!isLogin && (
+                <div className="relative">
+                  <Smartphone className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="tel" placeholder="Phone (Optional)"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none transition-all"
+                  />
+                </div>
+              )}
+            </div>
+
+            <button 
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center space-x-2"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : (isLogin ? <LogIn size={20}/> : <UserPlus size={20}/>)}
+              <span>{isLogin ? 'Login Now' : 'Register Account'}</span>
+            </button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <button 
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+            >
+              {isLogin ? "New to ChinaMed? Create an account" : "Already have an account? Sign in"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
