@@ -82,4 +82,23 @@ app.post('/api/admin/confirm-stage3', async (c) => {
   return c.json({ status: 'success' })
 })
 
+// backend/src/index.ts 新增接口
+
+// 通过邮箱查询用户最新的订单
+app.get('/api/cases/lookup/:email', async (c) => {
+  const supabase = getSupabase(c)
+  const email = c.req.param('email')
+  
+  const { data, error } = await supabase
+    .from('cases')
+    .select('id, stage1_paid, status')
+    .eq('user_email', email)
+    .order('created_at', { ascending: false }) // 获取最近的一个
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data || { noCase: true })
+})
+
 export default app
