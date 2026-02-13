@@ -1,54 +1,75 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import ApplyPage from './pages/ApplyPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import AuthPage from './pages/AuthPage'; 
-import { AuthProvider, useAuth } from './AuthContext'; // 引入 Auth Provider
+import { AuthProvider, useAuth } from './AuthContext';
+import Navbar from './components/Navbar';
 
-export const API_BASE_URL = "https://backend.bigsea0922.workers.dev"; // 确保是你的 Workers 地址
+// 确保这里的后端地址正确
+export const API_BASE_URL = "https://backend.bigsea0922.workers.dev"; 
 
-// 路由守卫组件
-const ProtectedRoute: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
-    const { user, role, loading } = useAuth();
+// 🔒 路由守卫组件
+const ProtectedRoute = ({ children, adminOnly = false }: { children: JSX.Element, adminOnly?: boolean }) => {
+  const { user, role, loading } = useAuth();
+  const location = useLocation();
 
-    if (loading) return null; // 等待 Context 加载完成
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+  );
+  
+  if (!user) {
+    // 未登录，带上当前路径跳转到登录页，方便登录后跳回来
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
 
-    if (!user) return <Navigate to="/auth" replace />; // 未登录，跳转到登录页
+  if (adminOnly && role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
 
-    if (adminOnly && role !== 'admin') {
-        alert("Unauthorized access.");
-        return <Navigate to="/" replace />; // 非管理员，跳转到首页
-    }
-
-    return <>{children}</>;
+  return children;
 };
-
 
 function App() {
   return (
     <AuthProvider>
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <Navbar />
         <Routes>
+          {/* 1. 公开页面：首页 */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* 2. 公开页面：登录/注册 */}
           <Route path="/auth" element={<AuthPage />} />
-
-          {/* 普通用户路由 */}
-          <Route path="/" element={
+          
+          {/* 3. 受保护页面：挂号登记页 (必须定义 /apply) */}
+          <Route path="/apply" element={
             <ProtectedRoute>
-                <ApplyPage />
+              <ApplyPage />
             </ProtectedRoute>
           } />
+          
+          {/* 4. 受保护页面：个人控制面板 */}
           <Route path="/dashboard/:id" element={
             <ProtectedRoute>
-                <DashboardPage />
+              <DashboardPage />
             </ProtectedRoute>
           } />
 
-          {/* 管理员专属路由 */}
+          {/* 5. 管理员专区 */}
           <Route path="/admin" element={
             <ProtectedRoute adminOnly={true}>
-                <AdminPage />
+              <AdminPage />
             </ProtectedRoute>
           } />
+
+          {/* 6. 404 兜底：跳回首页 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </div>
     </AuthProvider>
   );
 }
