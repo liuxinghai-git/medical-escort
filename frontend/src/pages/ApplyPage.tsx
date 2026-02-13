@@ -10,6 +10,7 @@ import { supabase } from '../supabaseClient';
 export default function ApplyPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [checking, setChecking] = useState(true); // 增加一个检查状态
   
   // 表单状态
   const [form, setForm] = useState({
@@ -60,6 +61,28 @@ export default function ApplyPage() {
       setIsUploading(false);
     }
   };
+
+   useEffect(() => {
+    const checkExistingCase = async () => {
+      if (!user?.email) return;
+      
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/cases/lookup/${user.email}`);
+        const caseInfo = await res.json();
+        
+        // 如果 Stage 1 已经付过钱了，直接送他去 Dashboard，不准他再填一遍表
+        if (caseInfo.id && caseInfo.stage1_paid) {
+          navigate(`/dashboard/${caseInfo.id}`);
+        }
+      } catch (e) {
+        console.error("Lookup error", e);
+      } finally {
+        setChecking(false);
+      }
+    };
+    checkExistingCase();
+  }, [user, navigate]);
+   if (checking) return <div className="p-20 text-center">Checking your records...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-6">
