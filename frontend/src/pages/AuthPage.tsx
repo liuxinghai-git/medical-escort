@@ -10,25 +10,36 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // frontend/src/pages/AuthPage.tsx 修改 handleAuth 函数
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const { error } = isLogin 
+  
+    const { data, error } = isLogin 
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ 
-          email, 
-          password,
-          options: { emailRedirectTo: window.location.origin } 
-        });
-
+      : await supabase.auth.signUp({ email, password });
+  
     if (error) {
-      alert("Error: " + error.message);
+      alert("Auth Error: " + error.message);
     } else {
-      if (isLogin) {
-        navigate('/');
+      if (isLogin && data.user) {
+        // ⬇️ 登录成功后，立即检查是否有历史订单 ⬇️
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/cases/lookup/${email}`);
+          const caseInfo = await res.json();
+          
+          if (caseInfo.id) {
+            // 如果有订单，直接去 Dashboard
+            navigate(`/dashboard/${caseInfo.id}`);
+          } else {
+            // 如果没有订单，去登记页
+            navigate('/apply');
+          }
+        } catch (err) {
+          navigate('/apply'); // 出错则默认去登记页
+        }
       } else {
-        alert("Registration success! Please check your email for the confirmation link.");
+        alert("Please check your email to verify your account!");
       }
     }
     setLoading(false);
