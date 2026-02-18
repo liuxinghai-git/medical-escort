@@ -101,4 +101,21 @@ app.get('/api/cases/lookup/:email', async (c) => {
   return c.json(data || { noCase: true })
 })
 
+// 在后端现有接口中，增加这个“根据邮箱查询最新订单”的接口
+app.get('/api/cases/user/:email', async (c) => {
+  const supabase = getSupabase(c)
+  const email = c.req.param('email')
+  
+  const { data, error } = await supabase
+    .from('cases')
+    .select('*')
+    .eq('user_email', email)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data || { not_found: true })
+})
+
 export default app
