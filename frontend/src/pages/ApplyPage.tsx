@@ -1,7 +1,6 @@
 //import React, { useState } from 'react';
 // ⬇️ 必须在这里显式加上 useEffect
 import React, { useState, useEffect } from 'react'; 
-import { useNavigate } from 'react-router-dom';
 // ... 其他 import 保持不变
 import { useNavigate } from 'react-router-dom';
 import { PayPalButtons } from "@paypal/react-paypal-js";
