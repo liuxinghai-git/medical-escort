@@ -60,7 +60,7 @@ export default function LandingPage() {
             <div onClick={() => setSelectedCity('Shanghai')}>
               <CityCard 
                 city="Shanghai" 
-                img="https://images.unsplash.com/photo-1548919973-5cdf5916ad7a?q=80&w=1000&auto=format&fit=crop" 
+                img="https://www.bing.com/th/id/OIP.1S7xD3X1ovAbJfPo-P4eAAHaE8?w=235&h=180&c=7&r=0&o=7&cb=defcache2&dpr=1.5&pid=1.7&rm=3&defcache=1" 
                 count="Top Tier Hospitals" 
               />
             </div>
@@ -68,7 +68,7 @@ export default function LandingPage() {
             <div onClick={() => setSelectedCity('Beijing')}>
               <CityCard 
                 city="Beijing" 
-                img="https://images.unsplash.com/photo-1529921879218-f996677ca76e?q=80&w=1000&auto=format&fit=crop" 
+                img="https://www.bing.com/th/id/OIP.tf8-jIMtoCToEzUQchTucgHaE8?w=256&h=180&c=7&r=0&o=7&cb=defcache2&dpr=1.5&pid=1.7&rm=3&defcache=1" 
                 count="Top Tier Hospitals" 
               />
             </div>
