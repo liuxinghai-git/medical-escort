@@ -49,7 +49,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       {/* 左侧：品牌背书区 */}
       <div className="hidden md:flex md:w-1/2 bg-blue-600 p-12 flex-col justify-between text-white relative overflow-hidden" style="
-    margin-top: 40px;>
+    margin-top: 40px;">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full-mr-32-mt-32 opacity-50"></div>
         <div className="z-10">
           <div className="flex items-center space-x-2 text-2xl font-black italic tracking-tighter mb-12">
