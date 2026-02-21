@@ -133,10 +133,10 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <div onClick={() => setSelectedCity('Shanghai')} className="cursor-pointer group">
-               <CityCard city="Shanghai" img="https://images.unsplash.com/photo-1548919973-5cdf5916ad7a?q=80&w=1000" />
+               <CityCard city="Shanghai" img="https://images.pexels.com/photos/2763384/pexels-photo-2763384.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
             </div>
             <div onClick={() => setSelectedCity('Beijing')} className="cursor-pointer group">
-               <CityCard city="Beijing" img="https://images.unsplash.com/photo-1529921879218-f996677ca76e?q=80&w=1000" />
+               <CityCard city="Beijing" img="https://images.pexels.com/photos/5102098/pexels-photo-5102098.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" />
             </div>
           </div>
         </div>
