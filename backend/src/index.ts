@@ -118,4 +118,46 @@ app.get('/api/cases/user/:email', async (c) => {
   return c.json(data || { not_found: true })
 })
 
+// --- 1. 用户/前端获取所有城市和医院列表 ---
+app.get('/api/meta/hospitals', async (c) => {
+  const supabase = getSupabase(c)
+  // 获取所有城市及其关联的医院
+  const { data, error } = await supabase
+    .from('dim_cities')
+    .select(`
+      name,
+      dim_hospitals ( name )
+    `)
+  
+  if (error) return c.json({ error: error.message }, 500)
+  
+  // 转换数据格式为前端容易处理的对象 { "Shanghai": ["Hospital A", "Hospital B"] }
+  const formatted = data.reduce((acc: any, item: any) => {
+    acc[item.name] = item.dim_hospitals.map((h: any) => h.name)
+    return acc
+  }, {})
+  
+  return c.json(formatted)
+})
+
+// --- 2. 管理员添加城市 ---
+app.post('/api/admin/meta/cities', async (c) => {
+  const { name } = await c.req.json()
+  const { data, error } = await getSupabase(c).from('dim_cities').insert([{ name }]).select()
+  return error ? c.json(error, 400) : c.json(data)
+})
+
+// --- 3. 管理员给特定城市添加医院 ---
+app.post('/api/admin/meta/hospitals', async (c) => {
+  const { cityName, hospitalName } = await c.req.json()
+  const supabase = getSupabase(c)
+  
+  // 先找城市ID
+  const { data: city } = await supabase.from('dim_cities').select('id').eq('name', cityName).single()
+  if (!city) return c.json({ error: 'City not found' }, 404)
+  
+  const { error } = await supabase.from('dim_hospitals').insert([{ city_id: city.id, name: hospitalName }])
+  return error ? c.json(error, 400) : c.json({ status: 'success' })
+})
+
 export default app
