@@ -113,4 +113,48 @@ export default function AdminPage() {
   );
 }
 
+// frontend/src/pages/AdminPage.tsx 新增管理模块
+
+export function DataManagement() {
+  const [newCity, setNewCity] = useState('');
+  const [targetCity, setTargetCity] = useState('');
+  const [newHospital, setNewHospital] = useState('');
+
+  const addCity = async () => {
+    await fetch(`${API_BASE_URL}/api/admin/meta/cities`, {
+      method: 'POST',
+      body: JSON.stringify({ name: newCity })
+    });
+    alert("City Added");
+    window.location.reload();
+  };
+
+  const addHospital = async () => {
+    await fetch(`${API_BASE_URL}/api/admin/meta/hospitals`, {
+      method: 'POST',
+      body: JSON.stringify({ cityName: targetCity, hospitalName: newHospital })
+    });
+    alert("Hospital Added");
+    window.location.reload();
+  };
+
+  return (
+    <div className="mt-12 grid md:grid-cols-2 gap-8 bg-slate-100 p-8 rounded-3xl">
+      <div className="space-y-4">
+        <h3 className="font-bold text-lg">Add New City</h3>
+        <input className="w-full p-2 rounded border" placeholder="City Name (e.g. Heihe)" 
+          onChange={e => setNewCity(e.target.value)} />
+        <button onClick={addCity} className="bg-slate-800 text-white px-4 py-2 rounded font-bold">Save City</button>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="font-bold text-lg">Add Hospital to City</h3>
+        <input className="w-full p-2 rounded border" placeholder="City Name" onChange={e => setTargetCity(e.target.value)} />
+        <input className="w-full p-2 rounded border" placeholder="Hospital Name" onChange={e => setNewHospital(e.target.value)} />
+        <button onClick={addHospital} className="bg-blue-600 text-white px-4 py-2 rounded font-bold">Save Hospital</button>
+      </div>
+    </div>
+  );
+}
+
 
