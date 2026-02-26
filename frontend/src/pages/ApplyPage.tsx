@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PayPalButtons } from "@paypal/react-paypal-js";
+//import { 
+ // Camera, CheckCircle2, MapPin, Hospital, 
+//  Stethoscope, Loader2, User, AlertCircle, Info 
+//} from 'lucide-react';
+// 检查这一行，确保包含 ShieldCheck
 import { 
   Camera, CheckCircle2, MapPin, Hospital, 
-  Stethoscope, Loader2, User, AlertCircle, Info 
+  Stethoscope, Loader2, User, AlertCircle, Info, ShieldCheck 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 import { useAuth } from '../AuthContext';
