@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LogOut, CheckCircle, Clock, Shield, AlertCircle, 
+  LogOut, CheckCircle, Clock, Shield, AlertCircle, Activity,
   Loader2, Camera, Plus, Trash2, Hospital, MapPin, ExternalLink
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
