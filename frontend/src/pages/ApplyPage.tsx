@@ -8,7 +8,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 // 检查这一行，确保包含 ShieldCheck
 import { 
   Camera, CheckCircle2, MapPin, Hospital, 
-  Stethoscope, Loader2, User, AlertCircle, Info, ShieldCheck 
+  Stethoscope, Loader2, User, AlertCircle, Info, ShieldCheck, AlertTriangle 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 import { useAuth } from '../AuthContext';
