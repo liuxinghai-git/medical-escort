@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react'; // 补全 React 钩子导入
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import { Activity, LogOut, User, LayoutDashboard, FilePlus } from 'lucide-react';
-import { API_BASE_URL } from '../App'; // 确保 App.tsx 导出了这个变量
+import { Activity, LogOut, User as UserIcon, LayoutDashboard, FilePlus, ShieldAlert } from 'lucide-react';
+import { API_BASE_URL } from '../App';
 
 export default function Navbar() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const [lastCaseId, setLastCaseId] = useState<string | null>(null);
 
-  // 获取该用户最新的 Case ID
+  // 获取该用户最新的 Case ID，用于动态显示导航项
   useEffect(() => {
     if (user?.email) {
       fetch(`${API_BASE_URL}/api/cases/lookup/${user.email}`)
         .then(res => res.json())
         .then(data => {
-          if (data && data.id) {
+          if (data && data.found) {
             setLastCaseId(data.id);
+          } else {
+            setLastCaseId(null);
           }
         })
         .catch(err => console.error("Navbar lookup error:", err));
@@ -33,7 +35,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 py-3 px-6 fixed top-0 w-full z-[100] shadow-sm">
+    <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 py-3 px-6 fixed top-0 w-full z-[100] shadow-sm font-sans">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         
         {/* Logo 部分 */}
@@ -46,40 +48,35 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* 导航菜单 */}
-        <div className="flex items-center space-x-4 md:space-x-8">
+        {/* 导航右侧菜单 */}
+        <div className="flex items-center space-x-4 md:space-x-6">
           {user ? (
             <>
-              {/* 如果已经有 Case，显示 Dashboard，否则显示 Register */}
+              {/* 如果已经有 Case，显示 My Case，否则显示 Apply Now */}
               {lastCaseId ? (
-                <Link to={`/dashboard/${lastCaseId}`} className="flex items-center text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                <Link to={`/dashboard/${lastCaseId}`} className="flex items-center text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-xl transition-all">
                   <LayoutDashboard className="w-4 h-4 mr-1.5" />
                   My Case
                 </Link>
               ) : (
-                <Link to="/apply" className="flex items-center text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
+                <Link to="/apply" className="flex items-center text-sm font-bold text-slate-600 hover:text-blue-600 px-3 py-2 transition-all">
                   <FilePlus className="w-4 h-4 mr-1.5" />
                   Apply Now
                 </Link>
               )}
 
-              {/* 管理员入口 
+              {/* 管理员入口：只有 role 为 admin 时显示 */}
               {role === 'admin' && (
-                <Link to="/admin" className="text-sm font-black text-red-500 hover:text-red-600 border-l border-slate-200 pl-4">
+                <Link to="/admin" className="flex items-center text-sm font-black text-red-500 hover:bg-red-50 px-3 py-2 rounded-xl border border-red-100 transition-all">
+                  <ShieldAlert className="w-4 h-4 mr-1.5" />
                   ADMIN
                 </Link>
-              )}*/}
-              {/*// ✅ 正确做法：只做判断，不直接显示*/}
-              {role === 'admin' && (
-                <Link to="/admin" className="text-red-500 font-bold">Admin</Link>
               )}
-              {/*// 或者如果要显示，确保它是字符串*/}
-              <span>{String(role || '')}</span>
               
               {/* 用户信息与退出 */}
               <div className="flex items-center space-x-3 pl-4 border-l border-slate-100">
                 <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase leading-none">Logged in as</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase leading-none">Status: {role}</span>
                   <span className="text-xs font-bold text-slate-700">{user.email?.split('@')[0]}</span>
                 </div>
                 <button 
@@ -94,9 +91,9 @@ export default function Navbar() {
           ) : (
             <Link 
               to="/auth" 
-              className="bg-slate-900 text-white px-6 py-2 rounded-2xl text-sm font-bold hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-100 transition-all"
+              className="bg-slate-900 text-white px-6 py-2 rounded-2xl text-sm font-bold hover:bg-blue-600 transition-all"
             >
-              Get Started
+              Sign In
             </Link>
           )}
         </div>
