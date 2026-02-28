@@ -58,15 +58,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', currentUser.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error("DB Error:", error.message);
+        setRole('user'); // 报错了也设为普通用户，防止页面挂掉
+        return;
+      }
       
       setRole(data?.role as 'user' | 'admin' || 'user');
     } catch (error) {
-      console.error("Error fetching user role:", error);
-      setRole('user');
+      console.error("Crash Error:", err);
+      setRole('user'); // 🚨 关键：这里必须传字符串 'user'，绝不能传 err 对象！
     } finally {
       // 无论成功失败，都要停止 Loading
-      setLoading(false);
+     setLoading(false);
     }
   };
 
