@@ -69,11 +69,11 @@ export default function Navbar() {
                   ADMIN
                 </Link>
               )}*/}
-              // ✅ 正确做法：只做判断，不直接显示
+              {/*// ✅ 正确做法：只做判断，不直接显示*/}
               {role === 'admin' && (
                 <Link to="/admin" className="text-red-500 font-bold">Admin</Link>
               )}
-              // 或者如果要显示，确保它是字符串
+              {/*// 或者如果要显示，确保它是字符串*/}
               <span>{String(role || '')}</span>
               
               {/* 用户信息与退出 */}
