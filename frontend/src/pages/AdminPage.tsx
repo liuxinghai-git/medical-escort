@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// 找到这行引入图标的代码，确保包含 User 和 Activity
 import { 
-  LogOut, CheckCircle, Clock, Shield, AlertCircle, Activity,
-  Loader2, Camera, Plus, Trash2, Hospital, MapPin, ExternalLink
+  LogOut, CheckCircle, Clock, Shield, AlertCircle, 
+  Loader2, Camera, Plus, Trash2, Hospital, MapPin, 
+  ExternalLink, Activity, User  // ⬅️ 确保这两个在这里
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 import { useAuth } from '../AuthContext';
