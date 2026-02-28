@@ -63,12 +63,18 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* 管理员入口 */}
+              {/* 管理员入口 
               {role === 'admin' && (
                 <Link to="/admin" className="text-sm font-black text-red-500 hover:text-red-600 border-l border-slate-200 pl-4">
                   ADMIN
                 </Link>
+              )}*/}
+              // ✅ 正确做法：只做判断，不直接显示
+              {role === 'admin' && (
+                <Link to="/admin" className="text-red-500 font-bold">Admin</Link>
               )}
+              // 或者如果要显示，确保它是字符串
+              <span>{String(role || '')}</span>
               
               {/* 用户信息与退出 */}
               <div className="flex items-center space-x-3 pl-4 border-l border-slate-100">
