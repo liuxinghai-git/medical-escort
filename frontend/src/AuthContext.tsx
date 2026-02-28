@@ -16,28 +16,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = async (currentUser: User) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', currentUser.id)
-        .single();
-      
-      // 🚨 即使报错，也将 role 设为 'user' 字符串，绝不传 error 对象
-      if (error) {
-        console.error("Profile Fetch Error:", error.message);
-        setRole('user');
-      } else {
-        setRole(data?.role || 'user');
-      }
-    } catch (err) {
-      console.error("Critical Auth Error:", err);
-      setRole('user');
-    } finally {
-      setLoading(false);
+  // 找到 fetchUserProfile 函数，确保 catch 和 error 处理如下：
+const fetchUserProfile = async (currentUser: User) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', currentUser.id)
+      .single();
+    
+    if (error) {
+      console.error("Profile error:", error);
+      setRole('user'); // 🚨 强制设为字符串，绝不传 error 对象
+      return;
     }
-  };
+    
+    // 确保赋值的是字符串
+    setRole(String(data?.role || 'user')); 
+  } catch (err) {
+    console.error("Auth crash:", err);
+    setRole('user'); // 🚨 强制设为字符串
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
