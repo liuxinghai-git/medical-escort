@@ -30,12 +30,16 @@ export default function LandingPage() {
   // 城市背景图匹配逻辑
   const getCityImage = (city: string) => {
     const images: { [key: string]: string } = {
-      'Shanghai': 'https://images.unsplash.com/photo-1548919973-5cdf5916ad7a?q=80&w=800',
-      'Beijing': 'https://images.unsplash.com/photo-1529921879218-f996677ca76e?q=80&w=800',
-      'Guangzhou': 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=800',
-      'Shenzhen': 'https://images.unsplash.com/photo-1583248352195-d3a8e766ede2?q=80&w=800',
-      'Hangzhou': 'https://images.unsplash.com/photo-1599387737839-497677f98595?q=80&w=800',
-      'Chengdu': 'https://images.unsplash.com/photo-1518331182281-22906d203874?q=80&w=800',
+      'Shanghai': 'https://images.unsplash.com/photo-1616680687799-ea36d6fb2173?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fCVFNCVCOCU4QSVFNiVCNSVCN3xlbnwwfHwwfHx8MA%3D%3D',
+      'Beijing': 'https://images.unsplash.com/photo-1584872589930-e99fe5bf4408?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8JUU1JThDJTk3JUU0JUJBJUFDfGVufDB8fDB8fHww',
+      'Guangzhou': 'https://images.unsplash.com/photo-1743362306089-cff00e214ea2?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8JUU1JUI5JUJGJUU1JUI3JTlFfGVufDB8fDB8fHww',
+      'Shenzhen': 'https://images.unsplash.com/photo-1608381742187-ea4b48c56630?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8JUU2JUI3JUIxJUU1JTlDJUIzfGVufDB8fDB8fHww',
+      'Hangzhou': 'https://plus.unsplash.com/premium_photo-1692673142063-e1184cb78c0e?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8JUU2JTlEJUFEJUU1JUI3JTlFfGVufDB8fDB8fHww',
+      'Chengdu': 'https://images.unsplash.com/photo-1722525760755-ddd7145d82d4?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8JUU2JTg4JTkwJUU5JTgzJUJEfGVufDB8fDB8fHww',
+      'Chongqing': 'https://images.unsplash.com/photo-1567014688543-cc4abffb061a?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8JUU5JTg3JThEJUU1JUJBJTg2fGVufDB8fDB8fHww',
+     // 'Kunming': 'https://images.unsplash.com/photo-1623836506940-1db1f8fbcbcd?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8JUU2JTk4JTg2JUU2JTk4JThFfGVufDB8fDB8fHww',
+     // 'Heihe': 'https://images.unsplash.com/photo-1567014688543-cc4abffb061a?fm=jpg&q=80&w=800&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8JUU5JTg3JThEJUU1JUJBJTg2fGVufDB8fDB8fHww',
+      'Hainan': 'https://media.istockphoto.com/id/2219842386/photo/aerial-photography-of-coastline-in-haitang-bay-sanya-hainan-china-asia.webp?a=1&b=1&s=612x612&w=0&k=20&c=CBCxI4Fin1ymv_YSrFjJ0wOKbQVBT_9Egbupw9PmGF8=',
     };
     return images[city] || 'https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800';
   };
