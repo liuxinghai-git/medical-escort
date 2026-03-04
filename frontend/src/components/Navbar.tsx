@@ -36,7 +36,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 py-3 px-6 fixed top-0 w-full z-[100] shadow-sm font-sans">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         
         {/* Logo 部分 */}
         <Link to="/" className="flex items-center space-x-2 group">
