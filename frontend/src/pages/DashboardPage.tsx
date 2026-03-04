@@ -208,7 +208,7 @@ export default function DashboardPage() {
              <div className="space-y-3">
                 {/* WhatsApp 跳转 */}
                 <a 
-                  href="https://wa.me/你的手机号" // 🚨 替换成你的 WhatsApp 链接
+                  href="https://wa.me/15241189220" // 🚨 替换成你的 WhatsApp 链接
                   target="_blank" 
                   rel="noreferrer"
                   className="w-full bg-[#25D366] text-white py-3 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-md shadow-green-50"
