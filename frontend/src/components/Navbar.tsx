@@ -13,10 +13,10 @@ export default function Navbar() {
   // 获取该用户最新的 Case ID，用于动态显示导航项
   useEffect(() => {
     if (user?.email) {
-      fetch(`${API_BASE_URL}/api/cases/lookup/${user.email}`)
+      fetch(`${API_BASE_URL}/api/cases/user/${user.email}`)
         .then(res => res.json())
         .then(data => {
-          if (data && data.found) {
+          if (data && data.id) {
             setLastCaseId(data.id);
           } else {
             setLastCaseId(null);
