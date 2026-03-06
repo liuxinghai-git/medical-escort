@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// ✅ 1. 引入你新写的组件
+import PricingSection from './PricingSection'; 
 import { useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, Activity, MapPin, ChevronRight, 
@@ -120,6 +122,11 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+
+       {/* ========================================= */}
+      {/* ✅ 插入位置：在这里调用新的价格组件 */}
+      {/* ========================================= */}
+      <PricingSection />
 
       {/* --- 4. 功能步骤 --- */}
       <section className="py-24 bg-white border-y border-slate-100 text-center">
