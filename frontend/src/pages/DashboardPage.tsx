@@ -4,7 +4,7 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { 
   CheckCircle2, Clock, ShieldCheck, AlertCircle, 
   MapPin, Hospital, User, FileText, ExternalLink, 
-  Loader2, X, MessageCircle, Phone, Mail, Globe 
+  Loader2, X, MessageCircle, Phone, Globe 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 
@@ -33,10 +33,14 @@ export default function DashboardPage() {
   }, [caseData?.stage2_status, dispatch]);
 
   const fetchCase = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/cases/${id}`);
-    if (res.status === 404) return navigate('/');
-    const data = await res.json();
-    setCaseData(data);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/cases/${id}`);
+      if (res.status === 404) return navigate('/');
+      const data = await res.json();
+      setCaseData(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
   };
 
   useEffect(() => { fetchCase(); }, [id]);
@@ -58,7 +62,7 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold text-slate-900">Medical Case Overview</h1>
             <p className="text-xs text-slate-400 font-mono mt-1">Ref ID: {id}</p>
           </div>
-          <Badge active={caseData.stage2_status === 'captured'} label={caseData.stage2_status === 'captured' ? "Fully Confirmed" : "In Processing"} />
+          <Badge active={caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured'} label={caseData.stage2_status === 'paid' ? "Registration In Progress" : (caseData.stage2_status === 'captured' ? "Fully Confirmed" : "Action Required")} />
         </div>
       </div>
 
@@ -102,8 +106,11 @@ export default function DashboardPage() {
              </h3>
              <div className="space-y-0">
                 <Step status={caseData.stage1_paid ? 'done' : 'current'} title="Phase 1: Coordination" desc="Specialist matching & medical translation." />
-                <Step status={caseData.stage2_status === 'captured' ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
-                <Step status={caseData.stage3_status === 'paid' ? 'done' : (caseData.stage2_status === 'captured' ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
+                
+                {/* Stage 2 状态判断：如果是 paid/captured 就算完成 */}
+                <Step status={(caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured') ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
+                
+                <Step status={caseData.stage3_status === 'paid' ? 'done' : ((caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured') ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
              </div>
           </div>
         </div>
@@ -111,42 +118,79 @@ export default function DashboardPage() {
         {/* 右侧操作栏 */}
         <div className="space-y-6">
           
-          {/* Stage 2 支付 (Escrow) */}
-          {caseData.stage1_paid && caseData.stage2_status === 'not_started' && (
-            <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
-               <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-               <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
-               <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
-               <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                 We've verified your request. Deposit $100 to start the actual hospital registration.
-               </p>
-               <div className="bg-white rounded-2xl p-4 mb-6 text-slate-900 text-center shadow-inner">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
-                  <span className="text-3xl font-black">$100.00</span>
-               </div>
-               {isPending ? <Loader2 className="animate-spin mx-auto text-white" /> : (
-                 <PayPalButtons 
-                   style={{ layout: "vertical", height: 48 }}
-                   createOrder={(_, actions) => actions.order.create({
-                     intent: "AUTHORIZE",
-                     purchase_units: [{ 
-                        amount: { currency_code: "USD", value: "100.00" }, 
-                        custom_id: `${id}:stage_2`,
-                        description: "Escrow Deposit for Medical Appointment"
-                     }]
-                   })}
-                   onApprove={async (_, actions) => {
-                     await actions.order?.authorize();
-                     alert("Payment Authorized! We are now securing your slot."); 
-                     fetchCase();
-                   }}
-                 />
-               )}
+          {/* ========================================================= */}
+          {/* ✅ Stage 2: Escrow Payment (包含状态切换逻辑)             */}
+          {/* ========================================================= */}
+          {caseData.stage1_paid && (
+            <div className="relative">
+              {caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured' ? (
+                // 🔵 状态 B：支付成功后，显示“正在处理” (隐藏按钮)
+                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white text-center shadow-xl flex flex-col justify-center items-center animate-in fade-in zoom-in border border-blue-500/30">
+                  
+                  {/* 动态图标 */}
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm shadow-inner">
+                    <Loader2 className="w-10 h-10 text-white animate-spin-slow" /> 
+                  </div>
+
+                  <h3 className="text-2xl font-black mb-4 tracking-tight">Registration in Progress</h3>
+                  
+                  <div className="bg-white/10 rounded-xl p-4 mb-6 backdrop-blur-sm border border-white/10 w-full">
+                    <p className="text-sm font-medium text-blue-100 leading-relaxed">
+                      Your <strong className="text-white">$100.00</strong> deposit has been secured. 
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-blue-200 mb-8 max-w-xs mx-auto leading-relaxed">
+                    Our team is currently finalizing the booking with <strong>{caseData.target_hospital}</strong>. You will receive the admission voucher shortly.
+                  </p>
+
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-300 bg-blue-900/40 px-4 py-2 rounded-full">
+                    <ShieldCheck size={14} />
+                    <span>Funds Held in Escrow</span>
+                  </div>
+                </div>
+              ) : (
+                // 🔘 状态 A：未支付，显示原来的支付卡片
+                <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
+                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                   <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
+                   <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
+                   <p className="text-blue-100 text-sm mb-6 leading-relaxed">
+                     We've verified your request. Deposit $100 to start the actual hospital registration.
+                   </p>
+                   <div className="bg-white rounded-2xl p-4 mb-6 text-slate-900 text-center shadow-inner">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
+                      <span className="text-3xl font-black">$100.00</span>
+                   </div>
+                   {isPending ? <Loader2 className="animate-spin mx-auto text-white" /> : (
+                     <PayPalButtons 
+                       style={{ layout: "vertical", height: 48 }}
+                       createOrder={(_, actions) => actions.order.create({
+                         intent: "AUTHORIZE",
+                         purchase_units: [{ 
+                            amount: { currency_code: "USD", value: "100.00" }, 
+                            custom_id: `${id}:stage_2`,
+                            description: "Escrow Deposit for Medical Appointment"
+                         }]
+                       })}
+                       onApprove={async (_, actions) => {
+                         await actions.order?.authorize();
+                         // 🚀 关键：立即更新本地状态，触发 UI 切换
+                         setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
+                         // 同时重新获取数据以防万一
+                         fetchCase();
+                       }}
+                     />
+                   )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Stage 3 支付 (Companion) */}
-          {(caseData.stage2_status === 'authorized' || caseData.stage2_status === 'captured') && caseData.stage3_status !== 'paid' && (
+          {/* ========================================================= */}
+          {/* ✅ Stage 3: Medical Companion (只有当 S2 确认后才显示)      */}
+          {/* ========================================================= */}
+          {(caseData.stage2_status === 'captured') && caseData.stage3_status !== 'paid' && (
             <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50">
                <div className="flex items-center space-x-2 text-amber-600 mb-4 font-black text-xs uppercase tracking-widest">
                   <AlertCircle size={14}/> <span>Highly Recommended</span>
@@ -208,7 +252,7 @@ export default function DashboardPage() {
              <div className="space-y-3">
                 {/* WhatsApp 跳转 */}
                 <a 
-                  href="https://wa.me/15241189220" // 🚨 替换成你的 WhatsApp 链接
+                  href="https://wa.me/15241189220" 
                   target="_blank" 
                   rel="noreferrer"
                   className="w-full bg-[#25D366] text-white py-3 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-md shadow-green-50"
@@ -263,7 +307,7 @@ export default function DashboardPage() {
   );
 }
 
-// --- 辅助小组件 (保持之前的重构版) ---
+// --- 辅助小组件 ---
 
 function DetailItem({ icon, label, value }: any) {
   return (
