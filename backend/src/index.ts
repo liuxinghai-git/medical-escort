@@ -82,6 +82,26 @@ app.post('/api/admin/confirm-stage3', async (c) => {
   return c.json({ status: 'success' })
 })
 
+// --- 在后端 index.ts 中添加这个接口 ---
+
+// 用户完成 Stage 2 支付 (Escrow $100)
+app.post('/api/cases/:id/stage2-complete', async (c) => {
+  const id = c.req.param('id');
+  const supabase = getSupabase(c);
+
+  // 更新数据库状态为 'paid'
+  const { error } = await supabase
+    .from('cases') // 或者是 'applications'，看你的表名
+    .update({ 
+      stage2_status: 'paid', // 关键：设置为 paid
+      stage2_txn_id: 'PAYPAL_CAPTURED' // 标记一下
+    })
+    .eq('id', id);
+
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ success: true });
+});
+
 // backend/src/index.ts 新增接口
 
 // 通过邮箱查询用户最新的订单
