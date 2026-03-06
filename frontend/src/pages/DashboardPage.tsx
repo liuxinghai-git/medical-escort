@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
 
   // 1. 动态切换 PayPal 脚本模式 (intent)
+  /* 
   useEffect(() => {
     if (!caseData) return;
     const desiredIntent = (caseData.stage2_status === 'not_started') ? "authorize" : "capture";
@@ -30,7 +31,7 @@ export default function DashboardPage() {
         value: { ...options, intent: desiredIntent },
       });
     }
-  }, [caseData?.stage2_status, dispatch]);
+  }, [caseData?.stage2_status, dispatch]);*/
 
   const fetchCase = async () => {
     try {
@@ -166,7 +167,7 @@ export default function DashboardPage() {
                      <PayPalButtons 
                        style={{ layout: "vertical", height: 48 }}
                        createOrder={(_, actions) => actions.order.create({
-                         intent: "AUTHORIZE",
+                         intent: "CAPTURE", // ✅ 改为 CAPTURE
                          purchase_units: [{ 
                             amount: { currency_code: "USD", value: "100.00" }, 
                             custom_id: `${id}:stage_2`,
@@ -174,7 +175,8 @@ export default function DashboardPage() {
                          }]
                        })}
                        onApprove={async (_, actions) => {
-                         await actions.order?.authorize();
+                         //await actions.order?.authorize();
+                         await actions.order?.capture();
                          // 🚀 关键：立即更新本地状态，触发 UI 切换
                          setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
                          // 同时重新获取数据以防万一
