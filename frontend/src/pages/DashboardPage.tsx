@@ -3,35 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { 
   CheckCircle2, Clock, ShieldCheck, AlertCircle, 
-  MapPin, Hospital, User, FileText, ExternalLink, 
+  MapPin, Hospital, User, FileText, 
   Loader2, X, MessageCircle, Phone, Globe 
 } from 'lucide-react';
+// ⚠️ 确保这个路径正确，指向你的 App.tsx 或 config 文件
 import { API_BASE_URL } from '../App';
 
 export default function DashboardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [{ options, isPending }, dispatch] = usePayPalScriptReducer();
+  // 1. 去掉 dispatch，我们不再动态切换脚本，直接在 index.html 或 App.tsx 里配置好 capture 模式
+  // const [{ options, isPending }, dispatch] = usePayPalScriptReducer(); 
   const [caseData, setCaseData] = useState<any>(null);
-  const [isSupportOpen, setIsSupportOpen] = useState(false); // 控制联系弹窗
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   
   const [showPayStep3, setShowPayStep3] = useState(false);
   const [compForm, setCompForm] = useState({ contact: '', gender: 'No Preference', duration: 'morning' });
 
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
-
-  // 1. 动态切换 PayPal 脚本模式 (intent)
-  /* 
-  useEffect(() => {
-    if (!caseData) return;
-    const desiredIntent = (caseData.stage2_status === 'not_started') ? "authorize" : "capture";
-    if (options.intent !== desiredIntent) {
-      dispatch({
-        type: "resetOptions",
-        value: { ...options, intent: desiredIntent },
-      });
-    }
-  }, [caseData?.stage2_status, dispatch]);*/
 
   const fetchCase = async () => {
     try {
@@ -52,18 +41,23 @@ export default function DashboardPage() {
     </div>
   );
 
+  // 判断 Stage 2 是否已完成 (paid 或 captured 都算完成)
+  const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
+
   return (
-    // ⬇️ 关键修复：pt-28 确保在手机和电脑上都有足够的顶部间距，避开 Navbar
     <div className="min-h-screen bg-[#F8FAFC] pt-24 md:pt-28 pb-20">
       
-      {/* 顶部状态面包屑 - 适配不同分辨率 */}
+      {/* 顶部状态面包屑 */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 mb-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Medical Case Overview</h1>
             <p className="text-xs text-slate-400 font-mono mt-1">Ref ID: {id}</p>
           </div>
-          <Badge active={caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured'} label={caseData.stage2_status === 'paid' ? "Registration In Progress" : (caseData.stage2_status === 'captured' ? "Fully Confirmed" : "Action Required")} />
+          <Badge 
+            active={isStage2Paid} 
+            label={isStage2Paid ? "Registration In Progress" : "Action Required"} 
+          />
         </div>
       </div>
 
@@ -72,7 +66,7 @@ export default function DashboardPage() {
         {/* 左侧主要内容 */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* 1. 患者与医院信息卡片 */}
+          {/* 1. 信息卡片 */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
                <span className="text-sm font-bold flex items-center tracking-wide">
@@ -108,10 +102,18 @@ export default function DashboardPage() {
              <div className="space-y-0">
                 <Step status={caseData.stage1_paid ? 'done' : 'current'} title="Phase 1: Coordination" desc="Specialist matching & medical translation." />
                 
-                {/* Stage 2 状态判断：如果是 paid/captured 就算完成 */}
-                <Step status={(caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured') ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
+                {/* 状态逻辑：如果S2已付，则显示done，否则如果S1已付显示current */}
+                <Step 
+                  status={isStage2Paid ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} 
+                  title="Phase 2: Slot Booking (Escrow)" 
+                  desc="Registration securing via hospital internal systems." 
+                />
                 
-                <Step status={caseData.stage3_status === 'paid' ? 'done' : ((caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured') ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
+                <Step 
+                  status={caseData.stage3_status === 'paid' ? 'done' : (isStage2Paid ? 'current' : 'pending')} 
+                  title="Phase 3: Medical Companion" 
+                  desc="On-site guidance & professional translation." 
+                />
              </div>
           </div>
         </div>
@@ -123,10 +125,10 @@ export default function DashboardPage() {
           {/* ✅ Stage 2: Escrow Payment (包含状态切换逻辑)             */}
           {/* ========================================================= */}
           {caseData.stage1_paid && (
-            <div className="relative">
-              {caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured' ? (
-                // 🔵 状态 B：支付成功后，显示“正在处理” (隐藏按钮)
-                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white text-center shadow-xl flex flex-col justify-center items-center animate-in fade-in zoom-in border border-blue-500/30">
+            <div className="relative transition-all duration-500">
+              {isStage2Paid ? (
+                // 🔵 状态 B：已支付 (Paid) -> 显示“正在处理”
+                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white text-center shadow-xl flex flex-col justify-center items-center animate-in fade-in zoom-in border border-blue-500/30 min-h-[400px]">
                   
                   {/* 动态图标 */}
                   <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm shadow-inner">
@@ -137,12 +139,14 @@ export default function DashboardPage() {
                   
                   <div className="bg-white/10 rounded-xl p-4 mb-6 backdrop-blur-sm border border-white/10 w-full">
                     <p className="text-sm font-medium text-blue-100 leading-relaxed">
-                      Your <strong className="text-white">$100.00</strong> deposit has been secured. 
+                      Your <strong className="text-white">$100.00</strong> deposit has been verified. 
                     </p>
                   </div>
 
                   <p className="text-sm text-blue-200 mb-8 max-w-xs mx-auto leading-relaxed">
-                    Our team is currently finalizing the booking with <strong>{caseData.target_hospital}</strong>. You will receive the admission voucher shortly.
+                    Our team is currently finalizing the booking with <strong>{caseData.target_hospital}</strong>. 
+                    <br/><br/>
+                    Please wait for the notification to proceed to <strong>Phase 3 (Companion)</strong>.
                   </p>
 
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-300 bg-blue-900/40 px-4 py-2 rounded-full">
@@ -151,7 +155,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                // 🔘 状态 A：未支付，显示原来的支付卡片
+                // 🔘 状态 A：未支付 -> 显示 PayPal 按钮
                 <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                    <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
@@ -163,41 +167,54 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
                       <span className="text-3xl font-black">$100.00</span>
                    </div>
-                   {isPending ? <Loader2 className="animate-spin mx-auto text-white" /> : (
-                     <PayPalButtons 
-                       style={{ layout: "vertical", height: 48 }}
-                       createOrder={(_, actions) => actions.order.create({
-                         intent: "CAPTURE", // ✅ 改为 CAPTURE
-                         purchase_units: [{ 
-                            amount: { currency_code: "USD", value: "100.00" }, 
-                            custom_id: `${id}:stage_2`,
-                            description: "Escrow Deposit for Medical Appointment"
-                         }]
-                       })}
-                       onApprove={async (_, actions) => {
-                         //await actions.order?.authorize();
-                         await actions.order?.capture();
-                         // 🚀 关键：立即更新本地状态，触发 UI 切换
-                         setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
-                         // 同时重新获取数据以防万一
-                         fetchCase();
-                       }}
-                     />
-                   )}
+                   
+                   {/* PayPal 按钮 - 强制使用 CAPTURE 模式 */}
+                   <PayPalButtons 
+                     style={{ layout: "vertical", height: 48 }}
+                     createOrder={(_, actions) => actions.order.create({
+                       intent: "CAPTURE", // ✅ 强制使用 Capture 模式
+                       purchase_units: [{ 
+                          amount: { currency_code: "USD", value: "100.00" }, 
+                          custom_id: `${id}:stage_2`,
+                          description: "Escrow Deposit for Medical Appointment"
+                       }]
+                     })}
+                     onApprove={async (_, actions) => {
+                       // 1. 捕获资金
+                       await actions.order?.capture();
+                       
+                       // 2. 调用后端更新数据库 (确保这一步执行)
+                       try {
+                         await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
+                       } catch (err) {
+                         console.error("Backend update failed", err);
+                       }
+
+                       // 3. 🚀 关键：立即更新本地 UI，无需刷新页面
+                       setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
+                       
+                       alert("Deposit Received! We are processing your booking."); 
+                     }}
+                   />
+                   
+                   <p className="mt-4 text-center text-[10px] text-blue-200/60 uppercase tracking-widest">
+                     100% Refundable if booking fails
+                   </p>
                 </div>
               )}
             </div>
           )}
 
           {/* ========================================================= */}
-          {/* ✅ Stage 3: Medical Companion (只有当 S2 确认后才显示)      */}
+          {/* ✅ Stage 3: Medical Companion (S2 付完款后出现)             */}
           {/* ========================================================= */}
-          {(caseData.stage2_status === 'captured') && caseData.stage3_status !== 'paid' && (
-            <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50">
+          {isStage2Paid && caseData.stage3_status !== 'paid' && (
+            <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50 animate-in slide-in-from-bottom-4 duration-700">
                <div className="flex items-center space-x-2 text-amber-600 mb-4 font-black text-xs uppercase tracking-widest">
-                  <AlertCircle size={14}/> <span>Highly Recommended</span>
+                  <AlertCircle size={14}/> <span>Optional Service</span>
                </div>
-               <h3 className="text-lg font-bold text-slate-800 mb-4">Medical Companion</h3>
+               <h3 className="text-lg font-bold text-slate-800 mb-4">Phase 3: Medical Companion</h3>
+               <p className="text-sm text-slate-500 mb-6">Need a translator on-site? Book a professional companion.</p>
                
                {!showPayStep3 ? (
                  <div className="space-y-4">
@@ -237,8 +254,9 @@ export default function DashboardPage() {
                         await fetch(`${API_BASE_URL}/api/cases/${id}/companion-details`, {
                             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(compForm)
                         });
-                        alert("Service Confirmed! We will contact you shortly.");
+                        // 刷新页面状态
                         fetchCase();
+                        alert("Service Confirmed! We will contact you shortly.");
                       }}
                     />
                  </div>
@@ -246,13 +264,12 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* 🌐 多样化联系方式卡片 */}
+          {/* 🌐 联系方式 */}
           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
              <h4 className="font-bold text-slate-800 mb-2">Patient Support</h4>
              <p className="text-xs text-slate-500 mb-6 leading-relaxed">Questions about your hospital visit? Our global team is here to help.</p>
              
              <div className="space-y-3">
-                {/* WhatsApp 跳转 */}
                 <a 
                   href="https://wa.me/15241189220" 
                   target="_blank" 
@@ -262,45 +279,29 @@ export default function DashboardPage() {
                   <Phone className="w-4 h-4 mr-2" /> WhatsApp Us
                 </a>
 
-                {/* WeChat 弹窗触发器 */}
                 <button 
                   onClick={() => setIsSupportOpen(true)}
                   className="w-full bg-[#07C160] text-white py-3 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-md shadow-green-50"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" /> WeChat Support
                 </button>
-                
-                <a href="mailto:support@chinamed.com" className="block text-center text-xs text-slate-400 font-medium hover:text-blue-600 transition-colors py-2">
-                  support@chinamed.com
-                </a>
              </div>
           </div>
         </div>
       </div>
 
-      {/* 📸 统一联系中心弹窗 (Modal) */}
+      {/* 📸 WeChat Modal */}
       {isSupportOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-white rounded-[40px] p-10 max-w-sm w-full text-center relative shadow-2xl">
             <button onClick={() => setIsSupportOpen(false)} className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
               <X size={20} />
             </button>
-            
-            <div className="bg-blue-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 font-black text-2xl">
-               CM
-            </div>
-            
+            <div className="bg-blue-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 font-black text-2xl">CM</div>
             <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Concierge Chat</h3>
             <p className="text-sm text-slate-500 mb-8">Scan the QR code below to connect with your personal coordinator on WeChat.</p>
-            
             <div className="bg-slate-50 p-6 rounded-[32px] mb-8 border border-slate-100 shadow-inner">
-                {/* 🚨 确保 public/ 文件夹下有 wechat_qr.png */}
                 <img src="/wechat_qr.png" alt="WeChat QR" className="w-48 h-48 mx-auto mix-blend-multiply" />
-            </div>
-            
-            <div className="flex items-center justify-center space-x-2 text-[#07C160]">
-               <div className="w-2 h-2 bg-[#07C160] rounded-full animate-ping"></div>
-               <span className="text-xs font-black uppercase tracking-widest">Coordinators Online</span>
             </div>
           </div>
         </div>
@@ -310,7 +311,6 @@ export default function DashboardPage() {
 }
 
 // --- 辅助小组件 ---
-
 function DetailItem({ icon, label, value }: any) {
   return (
     <div className="flex items-start space-x-4">
