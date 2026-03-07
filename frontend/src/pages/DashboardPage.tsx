@@ -184,14 +184,32 @@ export default function DashboardPage() {
                        await actions.order?.capture();
                        
                        // 2. 调用后端更新数据库 (确保这一步执行)
-                       try {
-                         await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
-                       } catch (err) {
-                         console.error("Backend update failed", err);
-                       }
+                       //try {
+                      //   await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
+                       //} catch (err) {
+                      //   console.error("Backend update failed", err);
+                      // }
 
                        // 3. 🚀 关键：立即更新本地 UI，无需刷新页面
-                       setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
+                      // setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
+
+                       // 2. 🚀 关键修改：手动将本地状态设置为 'paid'
+                        // 这会让 isStage2Paid 变为 true，从而触发页面 UI 的自动切换
+                        setCaseData((prev: any) => ({ 
+                            ...prev, 
+                            stage2_status: 'paid' 
+                        }));
+                    
+                        // 3. 调用后端更新数据库 (异步执行，不阻塞 UI 切换)
+                        fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { 
+                            method: 'POST' 
+                        }).then(res => {
+                            if(res.ok) {
+                                console.log("Database updated successfully");
+                                // 4. 最后重新获取一次最新数据，确保以后刷新页面也是最新的
+                                fetchCase();
+                            }
+                        }).catch(err => console.error("Backend update failed", err));
                        
                        alert("Deposit Received! We are processing your booking."); 
                      }}
