@@ -53,8 +53,10 @@ export default function DashboardPage() {
   //const isStage3Paid = caseData.stage3_status === 'paid';
 
   // 你的状态机判断：
- const isPaid = caseData.stage2_status === 'paid';      // 钱已到账，后台在挂号中
- const isConfirmed = caseData.stage2_status === 'confirmed'; // 挂号完成，凭证已出
+  const isS1Paid = caseData.stage1_status === 'paid';
+  const isS2Paid = caseData.stage2_status === 'paid';
+  const isRegistered = caseData.stage2_status === 'confirmed'; // 这是挂号凭证已录入
+  const isS3Paid = caseData.stage3_status === 'paid';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-28 md:pt-28 pb-20">
@@ -136,32 +138,40 @@ export default function DashboardPage() {
           {/* ========================================================= */}
           {/* ✅ Stage 2: Escrow Payment (包含状态切换逻辑)             */}
           {/* ========================================================= */}
-          {/* 阶段 A：挂号中 (已付钱，等医院出号) */}
-            {isPaid && !isConfirmed && (
-               <div className="bg-blue-600 text-white p-8 rounded-3xl">
-                  <Loader2 className="animate-spin mb-4"/>
-                  <h3>Registration in Progress</h3>
-                  <p>We are securing your slot at the hospital.</p>
-               </div>
+           {/* --- S1 支付成功后的状态 --- */}
+            {isS1Paid && !isS2Paid && (
+              <div className="bg-blue-600 p-8 rounded-3xl text-white">
+                <h3>Stage 1 Confirmed</h3>
+                <p>Your assessment is complete. Please proceed to Escrow Payment ($100).</p>
+                <PayPalButtons ... />
+              </div>
             )}
         
-            {/* 阶段 B：挂号完成 (显示凭证 + 陪诊支付入口) */}
-            {isConfirmed && (
-               <div className="bg-emerald-500 text-white p-8 rounded-3xl">
-                  <CheckCircle2 />
-                  <h3>Registration Confirmed!</h3>
-                  <p>Voucher ID: {caseData.registration_voucher_id}</p>
-                  
-                  {/* 这里才出现陪诊的支付框 */}
-                  {caseData.stage3_status !== 'paid' && (
-                     <div className="mt-6 border-t border-white/20 pt-6">
-                        <h4 className="font-bold mb-4">Proceed to Phase 3: Companion</h4>
-                        <PayPalButtons ... />
-                     </div>
-                  )}
-               </div>
+            {/* --- S2 支付成功后的等待状态 --- */}
+            {isS2Paid && !isRegistered && (
+              <div className="bg-amber-500 p-8 rounded-3xl text-white">
+                <Loader2 className="animate-spin" />
+                <h3>Payment Received</h3>
+                <p>Waiting for hospital registration (Admin verification in progress)...</p>
+              </div>
             )}
-            </div>
+        
+            {/* --- S3 挂号成功后的显示状态 (包含陪诊支付入口) --- */}
+            {isRegistered && (
+              <div className="bg-green-600 p-8 rounded-3xl text-white">
+                <CheckCircle2 />
+                <h3>Registration Success!</h3>
+                <p>Voucher ID: {caseData.registration_voucher_id}</p>
+                
+                {/* 这里才显示陪诊支付窗口 */}
+                {!isS3Paid && (
+                   <div className="mt-6 border-t pt-6">
+                     <h4 className="font-bold">Phase 3: Book Companion</h4>
+                     <PayPalButtons ... />
+                   </div>
+                )}
+              </div>
+            )}
           )}
 
           {/* ========================================================= */}
