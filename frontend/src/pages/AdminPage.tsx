@@ -92,7 +92,20 @@ export default function AdminPage() {
         <button onClick={() => navigate('/')} className="mt-4 text-blue-600 font-bold underline">Return Home</button>
       </div>
     );
-  }
+  };
+  
+  // 在 AdminPage.tsx 中，给每个订单增加一个“更新凭证”功能
+const updateVoucher = async (caseId: string) => {
+  const voucher_id = prompt("Enter Voucher ID:");
+  const image_url = prompt("Enter Voucher Image URL:");
+  
+  await fetch(`${API_BASE_URL}/api/admin/cases/${caseId}/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ voucher_id, image_url })
+  });
+  alert("Voucher updated!");
+};
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
