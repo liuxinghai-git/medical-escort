@@ -102,6 +102,44 @@ app.post('/api/cases/:id/stage2-complete', async (c) => {
   return c.json({ success: true });
 });
 
+// 在你的后端处理更新挂号凭证的接口中
+//app.post('/api/cases/:id/stage2-complete', async (c) => {
+//  const id = c.req.param('id');
+//  const body = await c.req.json(); // 假设请求里带了凭证信息
+//  const supabase = getSupabase(c);
+
+//  const { error } = await supabase
+//    .from('cases')
+//    .update({ 
+ //     stage2_status: 'paid', // ✅ 将状态设为 paid，界面会自动隐藏支付框
+//      registration_voucher_id: body.voucher_id, // 存入医院给的凭证号
+//      registration_image_url: body.image_url    // 存入凭证图片链接
+//    })
+//    .eq('id', id);
+
+//  if (error) return c.json({ error: error.message }, 500);
+//  return c.json({ success: true });
+//});
+
+// 后端 API: 接收管理员录入的凭证信息
+app.post('/api/admin/cases/:id/verify', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json(); // 包含 voucher_id 和 image_url
+  const supabase = getSupabase(c);
+
+  const { error } = await supabase
+    .from('cases')
+    .update({ 
+      stage2_status: 'paid', // 标记为已完成
+      registration_voucher_id: body.voucher_id,
+      registration_image_url: body.image_url
+    })
+    .eq('id', id);
+
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ success: true });
+});
+
 // backend/src/index.ts 新增接口
 
 // 通过邮箱查询用户最新的订单
