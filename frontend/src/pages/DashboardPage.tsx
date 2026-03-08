@@ -49,8 +49,12 @@ export default function DashboardPage() {
 
   // 判断 Stage 2 是否已完成 (paid 或 captured 都算完成)
   //const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
-  const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
-  const isStage3Paid = caseData.stage3_status === 'paid';
+  //const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
+  //const isStage3Paid = caseData.stage3_status === 'paid';
+
+  // 你的状态机判断：
+ const isPaid = caseData.stage2_status === 'paid';      // 钱已到账，后台在挂号中
+ const isConfirmed = caseData.stage2_status === 'confirmed'; // 挂号完成，凭证已出
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-28 md:pt-28 pb-20">
@@ -132,43 +136,31 @@ export default function DashboardPage() {
           {/* ========================================================= */}
           {/* ✅ Stage 2: Escrow Payment (包含状态切换逻辑)             */}
           {/* ========================================================= */}
-          {caseData.stage1_paid && (
-            <div className="relative transition-all duration-500">
-              {isStage2Paid ? (
-                // ✅ 状态：已付款/凭证已录入 -> 显示凭证信息
-                // 🟢 挂号成功界面 (显示凭证)
-                <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl p-8 text-white shadow-xl animate-in fade-in zoom-in">
-                  <CheckCircle2 className="w-12 h-12 mb-4" />
-                  <h3 className="text-xl font-black mb-2">Registration Confirmed!</h3>
-                  <p className="text-sm opacity-90 mb-6">Your booking is secured at {caseData.target_hospital}.</p>
-                  <div className="bg-white/20 p-4 rounded-xl text-xs font-mono">
-                    <p className="opacity-70 uppercase font-bold mb-1">Voucher ID</p>
-                    {caseData.registration_voucher_id || "Verifying..."}
-                  </div>
-                </div>
-              ) : (
-                 // 🔵 支付界面
-                <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl">
-                   <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
-                   <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
-                   <div className="bg-white text-slate-900 rounded-2xl p-4 mb-6 text-center shadow-inner">
-                      <span className="text-3xl font-black">$100.00</span>
-                   </div>
-                   <PayPalButtons 
-                     style={{ layout: "vertical", height: 48 }}
-                     createOrder={(_, actions) => actions.order.create({
-                       intent: "CAPTURE",
-                       purchase_units: [{ amount: { currency_code: "USD", value: "100.00" }, description: "Registration Deposit" }]
-                     })}
-                     onApprove={async (_, actions) => {
-                       await actions.order?.capture();
-                       await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
-                       setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
-                       alert("Payment Received!");
-                     }}
-                   />
-                </div>
-              )}
+          {/* 阶段 A：挂号中 (已付钱，等医院出号) */}
+            {isPaid && !isConfirmed && (
+               <div className="bg-blue-600 text-white p-8 rounded-3xl">
+                  <Loader2 className="animate-spin mb-4"/>
+                  <h3>Registration in Progress</h3>
+                  <p>We are securing your slot at the hospital.</p>
+               </div>
+            )}
+        
+            {/* 阶段 B：挂号完成 (显示凭证 + 陪诊支付入口) */}
+            {isConfirmed && (
+               <div className="bg-emerald-500 text-white p-8 rounded-3xl">
+                  <CheckCircle2 />
+                  <h3>Registration Confirmed!</h3>
+                  <p>Voucher ID: {caseData.registration_voucher_id}</p>
+                  
+                  {/* 这里才出现陪诊的支付框 */}
+                  {caseData.stage3_status !== 'paid' && (
+                     <div className="mt-6 border-t border-white/20 pt-6">
+                        <h4 className="font-bold mb-4">Proceed to Phase 3: Companion</h4>
+                        <PayPalButtons ... />
+                     </div>
+                  )}
+               </div>
+            )}
             </div>
           )}
 
