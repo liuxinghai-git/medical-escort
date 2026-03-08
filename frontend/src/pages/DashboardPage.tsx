@@ -35,6 +35,12 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchCase(); }, [id]);
 
+  // 2. 自动轮询：每30秒查一次数据库，确保凭证录入后界面自动更新
+  useEffect(() => {
+    const interval = setInterval(fetchCase, 30000);
+    return () => clearInterval(interval);
+  }, [id]);
+
   if (!caseData) return (
     <div className="h-screen flex items-center justify-center bg-slate-50">
       <Loader2 className="animate-spin text-blue-600 w-12 h-12" />
@@ -42,10 +48,12 @@ export default function DashboardPage() {
   );
 
   // 判断 Stage 2 是否已完成 (paid 或 captured 都算完成)
+  //const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
   const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
+  const isStage3Paid = caseData.stage3_status === 'paid';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pt-24 md:pt-28 pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] pt-28 md:pt-28 pb-20">
       
       {/* 顶部状态面包屑 */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 mb-8">
@@ -127,97 +135,38 @@ export default function DashboardPage() {
           {caseData.stage1_paid && (
             <div className="relative transition-all duration-500">
               {isStage2Paid ? (
-                // 🔵 状态 B：已支付 (Paid) -> 显示“正在处理”
-                <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white text-center shadow-xl flex flex-col justify-center items-center animate-in fade-in zoom-in border border-blue-500/30 min-h-[400px]">
-                  
-                  {/* 动态图标 */}
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm shadow-inner">
-                    <Loader2 className="w-10 h-10 text-white animate-spin-slow" /> 
-                  </div>
-
-                  <h3 className="text-2xl font-black mb-4 tracking-tight">Registration in Progress</h3>
-                  
-                  <div className="bg-white/10 rounded-xl p-4 mb-6 backdrop-blur-sm border border-white/10 w-full">
-                    <p className="text-sm font-medium text-blue-100 leading-relaxed">
-                      Your <strong className="text-white">$100.00</strong> deposit has been verified. 
-                    </p>
-                  </div>
-
-                  <p className="text-sm text-blue-200 mb-8 max-w-xs mx-auto leading-relaxed">
-                    Our team is currently finalizing the booking with <strong>{caseData.target_hospital}</strong>. 
-                    <br/><br/>
-                    Please wait for the notification to proceed to <strong>Phase 3 (Companion)</strong>.
-                  </p>
-
-                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-300 bg-blue-900/40 px-4 py-2 rounded-full">
-                    <ShieldCheck size={14} />
-                    <span>Funds Held in Escrow</span>
+                // ✅ 状态：已付款/凭证已录入 -> 显示凭证信息
+                // 🟢 挂号成功界面 (显示凭证)
+                <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl p-8 text-white shadow-xl animate-in fade-in zoom-in">
+                  <CheckCircle2 className="w-12 h-12 mb-4" />
+                  <h3 className="text-xl font-black mb-2">Registration Confirmed!</h3>
+                  <p className="text-sm opacity-90 mb-6">Your booking is secured at {caseData.target_hospital}.</p>
+                  <div className="bg-white/20 p-4 rounded-xl text-xs font-mono">
+                    <p className="opacity-70 uppercase font-bold mb-1">Voucher ID</p>
+                    {caseData.registration_voucher_id || "Verifying..."}
                   </div>
                 </div>
               ) : (
-                // 🔘 状态 A：未支付 -> 显示 PayPal 按钮
-                <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
-                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                 // 🔵 支付界面
+                <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl">
                    <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
                    <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
-                   <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                     We've verified your request. Deposit $100 to start the actual hospital registration.
-                   </p>
-                   <div className="bg-white rounded-2xl p-4 mb-6 text-slate-900 text-center shadow-inner">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
+                   <div className="bg-white text-slate-900 rounded-2xl p-4 mb-6 text-center shadow-inner">
                       <span className="text-3xl font-black">$100.00</span>
                    </div>
-                   
-                   {/* PayPal 按钮 - 强制使用 CAPTURE 模式 */}
                    <PayPalButtons 
                      style={{ layout: "vertical", height: 48 }}
                      createOrder={(_, actions) => actions.order.create({
-                       intent: "CAPTURE", // ✅ 强制使用 Capture 模式
-                       purchase_units: [{ 
-                          amount: { currency_code: "USD", value: "100.00" }, 
-                          custom_id: `${id}:stage_2`,
-                          description: "Escrow Deposit for Medical Appointment"
-                       }]
+                       intent: "CAPTURE",
+                       purchase_units: [{ amount: { currency_code: "USD", value: "100.00" }, description: "Registration Deposit" }]
                      })}
                      onApprove={async (_, actions) => {
-                       // 1. 捕获资金
                        await actions.order?.capture();
-                       
-                       // 2. 调用后端更新数据库 (确保这一步执行)
-                       //try {
-                      //   await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
-                       //} catch (err) {
-                      //   console.error("Backend update failed", err);
-                      // }
-
-                       // 3. 🚀 关键：立即更新本地 UI，无需刷新页面
-                      // setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
-
-                       // 2. 🚀 关键修改：手动将本地状态设置为 'paid'
-                        // 这会让 isStage2Paid 变为 true，从而触发页面 UI 的自动切换
-                        setCaseData((prev: any) => ({ 
-                            ...prev, 
-                            stage2_status: 'paid' 
-                        }));
-                    
-                        // 3. 调用后端更新数据库 (异步执行，不阻塞 UI 切换)
-                        fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { 
-                            method: 'POST' 
-                        }).then(res => {
-                            if(res.ok) {
-                                console.log("Database updated successfully");
-                                // 4. 最后重新获取一次最新数据，确保以后刷新页面也是最新的
-                                fetchCase();
-                            }
-                        }).catch(err => console.error("Backend update failed", err));
-                       
-                       alert("Deposit Received! We are processing your booking."); 
+                       await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
+                       setCaseData((prev: any) => ({ ...prev, stage2_status: 'paid' }));
+                       alert("Payment Received!");
                      }}
                    />
-                   
-                   <p className="mt-4 text-center text-[10px] text-blue-200/60 uppercase tracking-widest">
-                     100% Refundable if booking fails
-                   </p>
                 </div>
               )}
             </div>
