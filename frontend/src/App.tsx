@@ -70,7 +70,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
-        <!-- 录入凭证弹窗 -->
+        <!-- 录入凭证弹窗
         <div v-if="showVoucherModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
             <div class="bg-white p-6 rounded-2xl w-full max-w-sm">
                 <h3 class="text-lg font-bold mb-4">录入挂号信息</h3>
@@ -81,7 +81,7 @@ function App() {
                     <button @click="submitVoucher" class="flex-1 bg-blue-600 text-white py-2 rounded">Confirm</button>
                 </div>
             </div>
-        </div>
+        </div> -->
       </div>
     </AuthProvider>
   );
