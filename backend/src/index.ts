@@ -140,6 +140,18 @@ app.post('/api/admin/cases/:id/verify', async (c) => {
   return c.json({ success: true });
 });
 
+// 1. 确认支付已到账
+app.post('/api/admin/cases/:id/confirm-payment', async (c) => {
+    // 将状态从 authorized 改为 paid
+    // 更新数据库: stage2_status = 'paid'
+});
+
+// 2. 录入挂号凭证
+app.post('/api/admin/cases/:id/update-voucher', async (c) => {
+    const { voucher_id } = await c.req.json();
+    // 更新数据库: registration_voucher_id = voucher_id, stage2_status = 'confirmed'
+});
+
 // backend/src/index.ts 新增接口
 
 // 通过邮箱查询用户最新的订单
