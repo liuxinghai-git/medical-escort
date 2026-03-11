@@ -3,43 +3,43 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { 
   CheckCircle2, Clock, ShieldCheck, AlertCircle, 
-  MapPin, Hospital, User, FileText, 
-  Loader2, X, MessageCircle, Phone, Globe 
+  MapPin, Hospital, User, FileText, ExternalLink, 
+  Loader2, X, MessageCircle, Phone, Mail, Globe 
 } from 'lucide-react';
-// ⚠️ 确保这个路径正确，指向你的 App.tsx 或 config 文件
 import { API_BASE_URL } from '../App';
 
 export default function DashboardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  // 1. 去掉 dispatch，我们不再动态切换脚本，直接在 index.html 或 App.tsx 里配置好 capture 模式
-  // const [{ options, isPending }, dispatch] = usePayPalScriptReducer(); 
+  const [{ options, isPending }, dispatch] = usePayPalScriptReducer();
   const [caseData, setCaseData] = useState<any>(null);
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false); // 控制联系弹窗
   
   const [showPayStep3, setShowPayStep3] = useState(false);
   const [compForm, setCompForm] = useState({ contact: '', gender: 'No Preference', duration: 'morning' });
 
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
 
-  const fetchCase = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/cases/${id}`);
-      if (res.status === 404) return navigate('/');
-      const data = await res.json();
-      setCaseData(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
+  // 1. 动态切换 PayPal 脚本模式 (intent)
+  useEffect(() => {
+    if (!caseData) return;
+    const desiredIntent = (caseData.stage2_status === 'not_started') ? "authorize" : "capture";
+    if (options.intent !== desiredIntent) {
+      dispatch({
+        type: "resetOptions",
+        value: { ...options, intent: desiredIntent },
+      });
     }
+  }, [caseData?.stage2_status, dispatch]);
+
+  const fetchCase = async () => {
+    const res = await fetch(`${API_BASE_URL}/api/cases/${id}`);
+    if (res.status === 404) return navigate('/');
+    const data = await res.json();
+    setCaseData(data);
   };
 
   useEffect(() => { fetchCase(); }, [id]);
-
-  // 2. 自动轮询：每30秒查一次数据库，确保凭证录入后界面自动更新
-  useEffect(() => {
-    const interval = setInterval(fetchCase, 30000);
-    return () => clearInterval(interval);
-  }, [id]);
 
   if (!caseData) return (
     <div className="h-screen flex items-center justify-center bg-slate-50">
@@ -47,31 +47,18 @@ export default function DashboardPage() {
     </div>
   );
 
-  // 判断 Stage 2 是否已完成 (paid 或 captured 都算完成)
-  //const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
-  //const isStage2Paid = caseData.stage2_status === 'paid' || caseData.stage2_status === 'captured';
-  //const isStage3Paid = caseData.stage3_status === 'paid';
-
-  // 你的状态机判断：
-  const isS1Paid = caseData.stage1_status === 'paid';
-  const isS2Paid = caseData.stage2_status === 'paid';
-  const isRegistered = caseData.stage2_status === 'confirmed'; // 这是挂号凭证已录入
-  const isS3Paid = caseData.stage3_status === 'paid';
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pt-28 md:pt-28 pb-20">
+    // ⬇️ 关键修复：pt-28 确保在手机和电脑上都有足够的顶部间距，避开 Navbar
+    <div className="min-h-screen bg-[#F8FAFC] pt-24 md:pt-28 pb-20">
       
-      {/* 顶部状态面包屑 */}
+      {/* 顶部状态面包屑 - 适配不同分辨率 */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 mb-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Medical Case Overview</h1>
             <p className="text-xs text-slate-400 font-mono mt-1">Ref ID: {id}</p>
           </div>
-          <Badge 
-            active={isStage2Paid} 
-            label={isStage2Paid ? "Registration In Progress" : "Action Required"} 
-          />
+          <Badge active={caseData.stage2_status === 'captured'} label={caseData.stage2_status === 'captured' ? "Fully Confirmed" : "In Processing"} />
         </div>
       </div>
 
@@ -80,7 +67,7 @@ export default function DashboardPage() {
         {/* 左侧主要内容 */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* 1. 信息卡片 */}
+          {/* 1. 患者与医院信息卡片 */}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
                <span className="text-sm font-bold flex items-center tracking-wide">
@@ -115,19 +102,8 @@ export default function DashboardPage() {
              </h3>
              <div className="space-y-0">
                 <Step status={caseData.stage1_paid ? 'done' : 'current'} title="Phase 1: Coordination" desc="Specialist matching & medical translation." />
-                
-                {/* 状态逻辑：如果S2已付，则显示done，否则如果S1已付显示current */}
-                <Step 
-                  status={isStage2Paid ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} 
-                  title="Phase 2: Slot Booking (Escrow)" 
-                  desc="Registration securing via hospital internal systems." 
-                />
-                
-                <Step 
-                  status={caseData.stage3_status === 'paid' ? 'done' : (isStage2Paid ? 'current' : 'pending')} 
-                  title="Phase 3: Medical Companion" 
-                  desc="On-site guidance & professional translation." 
-                />
+                <Step status={caseData.stage2_status === 'captured' ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
+                <Step status={caseData.stage3_status === 'paid' ? 'done' : (caseData.stage2_status === 'captured' ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
              </div>
           </div>
         </div>
@@ -135,55 +111,47 @@ export default function DashboardPage() {
         {/* 右侧操作栏 */}
         <div className="space-y-6">
           
-          {/* ========================================================= */}
-          {/* ✅ Stage 2: Escrow Payment (包含状态切换逻辑)             */}
-          {/* ========================================================= */}
-           {/* --- S1 支付成功后的状态 --- */}
-            {isS1Paid && !isS2Paid && (
-              <div className="bg-blue-600 p-8 rounded-3xl text-white">
-                <h3>Stage 1 Confirmed</h3>
-                <p>Your assessment is complete. Please proceed to Escrow Payment ($100).</p>
-                <PayPalButtons ... />
-              </div>
-            )}
-        
-            {/* --- S2 支付成功后的等待状态 --- */}
-            {isS2Paid && !isRegistered && (
-              <div className="bg-amber-500 p-8 rounded-3xl text-white">
-                <Loader2 className="animate-spin" />
-                <h3>Payment Received</h3>
-                <p>Waiting for hospital registration (Admin verification in progress)...</p>
-              </div>
-            )}
-        
-            {/* --- S3 挂号成功后的显示状态 (包含陪诊支付入口) --- */}
-            {isRegistered && (
-              <div className="bg-green-600 p-8 rounded-3xl text-white">
-                <CheckCircle2 />
-                <h3>Registration Success!</h3>
-                <p>Voucher ID: {caseData.registration_voucher_id}</p>
-                
-                {/* 这里才显示陪诊支付窗口 */}
-                {!isS3Paid && (
-                   <div className="mt-6 border-t pt-6">
-                     <h4 className="font-bold">Phase 3: Book Companion</h4>
-                     <PayPalButtons ... />
-                   </div>
-                )}
-              </div>
-            )}
+          {/* Stage 2 支付 (Escrow) */}
+          {caseData.stage1_paid && caseData.stage2_status === 'not_started' && (
+            <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
+               <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+               <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
+               <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
+               <p className="text-blue-100 text-sm mb-6 leading-relaxed">
+                 We've verified your request. Deposit $100 to start the actual hospital registration.
+               </p>
+               <div className="bg-white rounded-2xl p-4 mb-6 text-slate-900 text-center shadow-inner">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
+                  <span className="text-3xl font-black">$100.00</span>
+               </div>
+               {isPending ? <Loader2 className="animate-spin mx-auto text-white" /> : (
+                 <PayPalButtons 
+                   style={{ layout: "vertical", height: 48 }}
+                   createOrder={(_, actions) => actions.order.create({
+                     intent: "AUTHORIZE",
+                     purchase_units: [{ 
+                        amount: { currency_code: "USD", value: "100.00" }, 
+                        custom_id: `${id}:stage_2`,
+                        description: "Escrow Deposit for Medical Appointment"
+                     }]
+                   })}
+                   onApprove={async (_, actions) => {
+                     await actions.order?.authorize();
+                     alert("Payment Authorized! We are now securing your slot."); 
+                     fetchCase();
+                   }}
+                 />
+               )}
+            </div>
           )}
 
-          {/* ========================================================= */}
-          {/* ✅ Stage 3: Medical Companion (S2 付完款后出现)             */}
-          {/* ========================================================= */}
-          {isStage2Paid && caseData.stage3_status !== 'paid' && (
-            <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50 animate-in slide-in-from-bottom-4 duration-700">
+          {/* Stage 3 支付 (Companion) */}
+          {(caseData.stage2_status === 'authorized' || caseData.stage2_status === 'captured') && caseData.stage3_status !== 'paid' && (
+            <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50">
                <div className="flex items-center space-x-2 text-amber-600 mb-4 font-black text-xs uppercase tracking-widest">
-                  <AlertCircle size={14}/> <span>Optional Service</span>
+                  <AlertCircle size={14}/> <span>Highly Recommended</span>
                </div>
-               <h3 className="text-lg font-bold text-slate-800 mb-4">Phase 3: Medical Companion</h3>
-               <p className="text-sm text-slate-500 mb-6">Need a translator on-site? Book a professional companion.</p>
+               <h3 className="text-lg font-bold text-slate-800 mb-4">Medical Companion</h3>
                
                {!showPayStep3 ? (
                  <div className="space-y-4">
@@ -223,9 +191,8 @@ export default function DashboardPage() {
                         await fetch(`${API_BASE_URL}/api/cases/${id}/companion-details`, {
                             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(compForm)
                         });
-                        // 刷新页面状态
-                        fetchCase();
                         alert("Service Confirmed! We will contact you shortly.");
+                        fetchCase();
                       }}
                     />
                  </div>
@@ -233,14 +200,15 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* 🌐 联系方式 */}
+          {/* 🌐 多样化联系方式卡片 */}
           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
              <h4 className="font-bold text-slate-800 mb-2">Patient Support</h4>
              <p className="text-xs text-slate-500 mb-6 leading-relaxed">Questions about your hospital visit? Our global team is here to help.</p>
              
              <div className="space-y-3">
+                {/* WhatsApp 跳转 */}
                 <a 
-                  href="https://wa.me/15241189220" 
+                  href="https://wa.me/15241189220" // 🚨 替换成你的 WhatsApp 链接
                   target="_blank" 
                   rel="noreferrer"
                   className="w-full bg-[#25D366] text-white py-3 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-md shadow-green-50"
@@ -248,29 +216,45 @@ export default function DashboardPage() {
                   <Phone className="w-4 h-4 mr-2" /> WhatsApp Us
                 </a>
 
+                {/* WeChat 弹窗触发器 */}
                 <button 
                   onClick={() => setIsSupportOpen(true)}
                   className="w-full bg-[#07C160] text-white py-3 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center shadow-md shadow-green-50"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" /> WeChat Support
                 </button>
+                
+                <a href="mailto:support@chinamed.com" className="block text-center text-xs text-slate-400 font-medium hover:text-blue-600 transition-colors py-2">
+                  support@chinamed.com
+                </a>
              </div>
           </div>
         </div>
       </div>
 
-      {/* 📸 WeChat Modal */}
+      {/* 📸 统一联系中心弹窗 (Modal) */}
       {isSupportOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-white rounded-[40px] p-10 max-w-sm w-full text-center relative shadow-2xl">
             <button onClick={() => setIsSupportOpen(false)} className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
               <X size={20} />
             </button>
-            <div className="bg-blue-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 font-black text-2xl">CM</div>
+            
+            <div className="bg-blue-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 font-black text-2xl">
+               CM
+            </div>
+            
             <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Concierge Chat</h3>
             <p className="text-sm text-slate-500 mb-8">Scan the QR code below to connect with your personal coordinator on WeChat.</p>
+            
             <div className="bg-slate-50 p-6 rounded-[32px] mb-8 border border-slate-100 shadow-inner">
+                {/* 🚨 确保 public/ 文件夹下有 wechat_qr.png */}
                 <img src="/wechat_qr.png" alt="WeChat QR" className="w-48 h-48 mx-auto mix-blend-multiply" />
+            </div>
+            
+            <div className="flex items-center justify-center space-x-2 text-[#07C160]">
+               <div className="w-2 h-2 bg-[#07C160] rounded-full animate-ping"></div>
+               <span className="text-xs font-black uppercase tracking-widest">Coordinators Online</span>
             </div>
           </div>
         </div>
@@ -279,7 +263,8 @@ export default function DashboardPage() {
   );
 }
 
-// --- 辅助小组件 ---
+// --- 辅助小组件 (保持之前的重构版) ---
+
 function DetailItem({ icon, label, value }: any) {
   return (
     <div className="flex items-start space-x-4">
