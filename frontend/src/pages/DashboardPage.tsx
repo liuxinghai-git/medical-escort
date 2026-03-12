@@ -127,7 +127,7 @@ export default function DashboardPage() {
                        })}
                        onApprove={async (_, actions) => {
                          await actions.order?.capture();
-                         await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-pay`, { method: 'POST' });
+                         await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-complete`, { method: 'POST' });
                          fetchCase(); // 触发页面更新
                        }}
                      />
