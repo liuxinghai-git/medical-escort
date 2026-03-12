@@ -216,22 +216,21 @@ const updateVoucher = async (caseId: string) => {
                     {/* Stage 2 挂号托管费 */}
                     <td className="px-8 py-6">
                       <div className="space-y-1">
-                        <div className={`text-[10px] font-black uppercase tracking-tighter w-fit px-2 py-0.5 rounded ${
-                          c.stage2_status === 'authorized' ? 'bg-amber-100 text-amber-600' :
-                          c.stage2_status === 'captured' ? 'bg-green-100 text-green-600' :
+                        <div className={`text-[10px] font-black uppercase tracking-tighter w-fit px-2 py-1 rounded ${
+                          c.stage2_status === 'paid' ? 'bg-amber-100 text-amber-600' :
+                          c.stage2_status === 'confirmed' ? 'bg-green-100 text-green-600' :
                           'bg-slate-100 text-slate-400'
                         }`}>
-                          {c.stage2_status}
+                          {c.stage2_status || 'not_started'}
                         </div>
-                        {c.stage1_paid && c.stage2_status === 'not_started' && (
+                    
+                        {/* 只有在状态为 paid 时，才显示“录入凭证”按钮 */}
+                        {c.stage2_status === 'paid' && (
                            <button 
-                            onClick={() => {
-                              const pid = window.prompt("Enter PayPal Auth ID from Merchant Dashboard:");
-                              if(pid) adminAction('confirm-stage2', { caseId: c.id, paypalAuthId: pid });
-                            }}
-                            className="text-[9px] font-bold text-amber-600 underline decoration-2 underline-offset-2 hover:text-amber-700"
+                            onClick={() => openVoucherModal(c)}
+                            className="text-[10px] font-black bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 shadow-lg mt-2 uppercase"
                            >
-                            Confirm $100 Auth
+                            录入挂号凭证
                            </button>
                         )}
                       </div>
@@ -352,5 +351,30 @@ const updateVoucher = async (caseId: string) => {
 
       </div>
     </div>
+
+    {/* 录入凭证弹窗 */}
+    {showVoucherModal && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
+          <h3 className="text-xl font-black mb-6">录入挂号信息</h3>
+          <input 
+            value={voucherForm.voucher_id}
+            onChange={(e) => setVoucherForm({...voucherForm, voucher_id: e.target.value})}
+            placeholder="Voucher ID (挂号凭证号)" 
+            className="w-full border-2 p-3 rounded-xl mb-3 outline-none" 
+          />
+          <input 
+            value={voucherForm.image_url}
+            onChange={(e) => setVoucherForm({...voucherForm, image_url: e.target.value})}
+            placeholder="Image URL (凭证图片链接)" 
+            className="w-full border-2 p-3 rounded-xl mb-6 outline-none" 
+          />
+          <div className="flex gap-3">
+            <button onClick={() => setShowVoucherModal(false)} className="flex-1 py-3 text-slate-500 font-bold">Cancel</button>
+            <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
+          </div>
+        </div>
+      </div>
+)}
   );
 }
