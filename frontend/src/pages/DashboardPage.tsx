@@ -111,42 +111,55 @@ export default function DashboardPage() {
         {/* 右侧操作栏 */}
         <div className="space-y-6">
           
-          {/* Stage 2 支付 (Escrow) */}
-          {caseData.stage1_paid && caseData.stage2_status === 'not_started' && (
-            <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
-               <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-               <ShieldCheck className="mb-4 w-10 h-10 text-blue-200" />
-               <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
-               <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                 We've verified your request. Deposit $100 to start the actual hospital registration.
-               </p>
-               <div className="bg-white rounded-2xl p-4 mb-6 text-slate-900 text-center shadow-inner">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Held securely by PayPal</span>
-                  <span className="text-3xl font-black">$100.00</span>
-               </div>
-               {isPending ? <Loader2 className="animate-spin mx-auto text-white" /> : (
-                 <PayPalButtons 
-                   style={{ layout: "vertical", height: 48 }}
-                   createOrder={(_, actions) => actions.order.create({
-                     intent: "AUTHORIZE",
-                     purchase_units: [{ 
-                        amount: { currency_code: "USD", value: "100.00" }, 
-                        custom_id: `${id}:stage_2`,
-                        description: "Escrow Deposit for Medical Appointment"
-                     }]
-                   })}
-                   onApprove={async (_, actions) => {
-                     await actions.order?.authorize();
-                     alert("Payment Authorized! We are now securing your slot."); 
-                     fetchCase();
-                   }}
-                 />
-               )}
+            {/* --- 阶段 2: 支付 $100 定金 --- */}
+            {caseData.stage1_paid && (
+              <div className="transition-all duration-500">
+                
+                {/* 情况 1: 未支付 */}
+                {!caseData.stage2_status && (
+                  <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl">
+                     <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
+                     <p className="text-blue-100 text-sm mb-6">Deposit $100 to start registration.</p>
+                     <PayPalButtons 
+                       createOrder={(_, actions) => actions.order.create({
+                         intent: "CAPTURE",
+                         purchase_units: [{ amount: { value: "100.00" }, description: "S2 Escrow" }]
+                       })}
+                       onApprove={async (_, actions) => {
+                         await actions.order?.capture();
+                         await fetch(`${API_BASE_URL}/api/cases/${id}/stage2-pay`, { method: 'POST' });
+                         fetchCase(); // 触发页面更新
+                       }}
+                     />
+                  </div>
+                )}
+          
+                {/* 情况 2: 已支付，等待 Admin 确认挂号信息 */}
+                {caseData.stage2_status === 'paid' && (
+                  <div className="bg-amber-500 rounded-3xl p-8 text-white text-center shadow-xl animate-pulse">
+                     <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin" />
+                     <h3 className="text-xl font-bold">Waiting for Registration</h3>
+                     <p className="text-sm opacity-90 mt-2">Admin is finalizing your booking with the hospital.</p>
+                  </div>
+                )}
+          
+                {/* 情况 3: Admin 已确认并录入挂号信息 (Confirmed) */}
+                {caseData.stage2_status === 'confirmed' && (
+                  <div className="bg-emerald-600 rounded-3xl p-8 text-white shadow-xl animate-in fade-in zoom-in">
+                     <CheckCircle2 className="w-12 h-12 mb-4" />
+                     <h3 className="text-xl font-black mb-2">Registration Confirmed!</h3>
+                     <div className="bg-white/20 p-4 rounded-xl text-xs font-mono mb-4">
+                       <p className="opacity-70 uppercase font-bold">Voucher ID</p>
+                       <p className="font-bold">{caseData.registration_voucher_id}</p>
+                     </div>
+                  </div>
+                )}
+  
             </div>
           )}
 
           {/* Stage 3 支付 (Companion) */}
-          {(caseData.stage2_status === 'authorized' || caseData.stage2_status === 'captured') && caseData.stage3_status !== 'paid' && (
+          {caseData.stage2_status === 'confirmed' && caseData.stage3_status !== 'paid' && (
             <div className="bg-white rounded-3xl p-7 border-2 border-amber-200 shadow-xl shadow-amber-50">
                <div className="flex items-center space-x-2 text-amber-600 mb-4 font-black text-xs uppercase tracking-widest">
                   <AlertCircle size={14}/> <span>Highly Recommended</span>
