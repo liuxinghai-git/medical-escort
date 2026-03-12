@@ -73,7 +73,7 @@ export default function AdminPage() {
   const submitVoucher = async () => {
     try {
         // 这里的 endpoint 必须对应你后端那个能将状态改为 'confirmed' 的接口
-        const res = await fetch(`${API_BASE_URL}/api/admin/cases/${currentOrderId}/verify-registration`, {
+        const res = await fetch(`${API_BASE_URL}/api/admin/cases/${currentOrderId}/finalize-registration`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(voucherForm) // 包含 voucher_id 和 image_url
