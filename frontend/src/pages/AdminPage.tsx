@@ -70,6 +70,26 @@ export default function AdminPage() {
     }
   };
 
+  const submitVoucher = async () => {
+    try {
+        // 这里的 endpoint 必须对应你后端那个能将状态改为 'confirmed' 的接口
+        const res = await fetch(`${API_BASE_URL}/api/admin/cases/${currentOrderId}/verify-registration`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(voucherForm) // 包含 voucher_id 和 image_url
+        });
+        
+        if (!res.ok) throw new Error("Update failed");
+        
+        alert("Success! Status updated to confirmed.");
+        setShowVoucherModal(false);
+        setVoucherForm({ voucher_id: '', image_url: '' });
+        fetchData(); // 刷新列表，此时按钮会自动消失，变成“已完成挂号”的绿字
+    } catch (e) {
+        alert("Update failed");
+    }
+};
+
   // --- 元数据管理函数 ---
   const handleAddCity = async () => {
     if (!newCity) return;
@@ -232,6 +252,26 @@ const updateVoucher = async (caseId: string) => {
                             )}
                          </div>
                        ) : <span className="text-xs text-slate-300 italic">No Request</span>}
+                    </td>
+
+                    {/* 在你的 AdminPage.tsx 的表格渲染中 */}
+                    <td className="px-8 py-6 text-right">
+                      {/* 状态 A: 用户刚付完 $100，显示“录入挂号凭证”按钮 */}
+                      {c.stage2_status === 'paid' && (
+                        <button 
+                          onClick={() => openVoucherModal(c)} // 触发你之前写的弹窗
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-green-700 shadow-lg"
+                        >
+                          录入挂号凭证
+                        </button>
+                      )}
+                    
+                      {/* 状态 B: 凭证已录入，显示“已挂号”标签 */}
+                      {c.stage2_status === 'confirmed' && (
+                        <span className="text-emerald-600 font-black text-xs uppercase bg-emerald-50 px-3 py-1 rounded-full">
+                          已完成挂号
+                        </span>
+                      )}
                     </td>
 
                     {/* 管理操作：最终执行 */}
