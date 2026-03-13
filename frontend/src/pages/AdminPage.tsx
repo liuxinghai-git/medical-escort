@@ -373,7 +373,7 @@ const updateVoucher = async (caseId: string) => {
             <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
           </div>
         </div>
-      </div>
       )}
+    </div>
   );
 }
