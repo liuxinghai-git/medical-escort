@@ -127,7 +127,7 @@ const updateVoucher = async (caseId: string) => {
   alert("Voucher updated!");
 };
 
-  return (
+  return (            
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
 
@@ -350,6 +350,7 @@ const updateVoucher = async (caseId: string) => {
 
       </div>
     </div>
+  </div>
 
   {showVoucherModal && (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -374,6 +375,5 @@ const updateVoucher = async (caseId: string) => {
         </div>
       </div>
       )}
-    </div>
   );
 }
