@@ -352,7 +352,6 @@ const updateVoucher = async (caseId: string) => {
       </div>
     </div>
 
-    {/* 录入凭证弹窗 */}
     {showVoucherModal && (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
@@ -375,6 +374,6 @@ const updateVoucher = async (caseId: string) => {
           </div>
         </div>
       </div>
-)}
+      )}
   );
 }
