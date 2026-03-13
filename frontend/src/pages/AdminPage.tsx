@@ -350,9 +350,8 @@ const updateVoucher = async (caseId: string) => {
         </div>
 
       </div>
-    </div>
 
-    {showVoucherModal && (
+      {showVoucherModal && (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
           <h3 className="text-xl font-black mb-6">录入挂号信息</h3>
@@ -373,6 +372,7 @@ const updateVoucher = async (caseId: string) => {
             <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
           </div>
         </div>
+      </div>
       )}
     </div>
   );
