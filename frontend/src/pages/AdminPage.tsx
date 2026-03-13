@@ -351,29 +351,5 @@ const updateVoucher = async (caseId: string) => {
       </div>
     </div>
   </div>
-
-  {showVoucherModal && (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl">
-          <h3 className="text-xl font-black mb-6">录入挂号信息</h3>
-          <input 
-            value={voucherForm.voucher_id}
-            onChange={(e) => setVoucherForm({...voucherForm, voucher_id: e.target.value})}
-            placeholder="Voucher ID (挂号凭证号)" 
-            className="w-full border-2 p-3 rounded-xl mb-3 outline-none" 
-          />
-          <input 
-            value={voucherForm.image_url}
-            onChange={(e) => setVoucherForm({...voucherForm, image_url: e.target.value})}
-            placeholder="Image URL (凭证图片链接)" 
-            className="w-full border-2 p-3 rounded-xl mb-6 outline-none" 
-          />
-          <div className="flex gap-3">
-            <button onClick={() => setShowVoucherModal(false)} className="flex-1 py-3 text-slate-500 font-bold">Cancel</button>
-            <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
-          </div>
-        </div>
-      </div>
-      )}
   );
 }
