@@ -350,6 +350,5 @@ const updateVoucher = async (caseId: string) => {
 
       </div>
     </div>
-  </div>
   );
 }
