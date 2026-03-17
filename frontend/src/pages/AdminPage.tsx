@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [cases, setCases] = useState<any[]>([]);
   const [hospitalMeta, setHospitalMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showVoucherModal, setShowVoucherModal] = useState(false); // 确保这行存在
 
   // 元数据管理状态
   const [newCity, setNewCity] = useState('');
