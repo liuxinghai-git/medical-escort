@@ -116,7 +116,7 @@ export default function DashboardPage() {
               <div className="transition-all duration-500">
                 
                 {/* 情况 1: 未支付 */}
-                {!caseData.stage2_status && (
+                {caseData.stage2_status === 'not_started' && (
                   <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl">
                      <h3 className="text-xl font-bold mb-2">Stage 2: Escrow Payment</h3>
                      <p className="text-blue-100 text-sm mb-6">Deposit $100 to start registration.</p>
