@@ -123,7 +123,11 @@ export default function DashboardPage() {
                      <PayPalButtons 
                        createOrder={(_, actions) => actions.order.create({
                          intent: "CAPTURE",
-                         purchase_units: [{ amount: { value: "100.00" }, description: "S2 Escrow" }]
+                          purchase_units: [{ 
+                          amount: { currency_code: "USD", value: "100.00" }, 
+                          custom_id: `${id}:stage_2`,
+                          description: "Escrow Deposit for Medical Appointment"
+                       }]
                        })}
                        onApprove={async (_, actions) => {
                          await actions.order?.capture();
