@@ -9,8 +9,8 @@ import './index.css'
 const initialOptions = {
     "clientId": "AZ0hrt6qBz8NmTLtbKzQ6ODkXOzqHnhQ_6Kj74FzPWulQJxKwnTReSbxfgwsQ2oIRKZe0TFsSv61I33i",//"YOUR_PAYPAL_CLIENT_ID",
     currency: "USD",
-    locale: "en_US" ,// ✅ 在这里添加 locale 参数
-    intent: "capture"// 默认模式，组件内可覆盖
+    locale: "en_US" // ✅ 在这里添加 locale 参数
+   // intent: "capture"// 默认模式，组件内可覆盖
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
