@@ -26,6 +26,13 @@ export default function AdminPage() {
   const [selectedCityForHosp, setSelectedCityForHosp] = useState('');
   const [newHospitalName, setNewHospitalName] = useState('');
 
+  // 👇 补上这个方法
+ const openVoucherModal = (id: string) => {
+  setCurrentCaseId(id); // 1. 记住当前点击的订单 ID
+  setVoucherForm({ voucher_id: '', image_url: '' }); // 2. 清空表单（防止看到上一个人的数据）
+  setShowVoucherModal(true); // 3. 打开弹窗
+};
+
   // 1. 初始化加载数据
   const fetchData = async () => {
     setLoading(true);
@@ -225,15 +232,6 @@ const updateVoucher = async (caseId: string) => {
                         }`}>
                           {c.stage2_status || 'not_started'}
                         </div>
-
-                        {/* 只有在状态为 paid 时，才显示“录入凭证”按钮 className="text-[10px] font-black bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 shadow-lg mt-2 uppercase"*/}
-                        {c.stage2_status === 'paid' && (
-                           <button 
-                            onClick={() => { setCurrentOrderId(c.id); setShowVoucherModal(true); }}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold">
-                            录入挂号凭证
-                           </button>
-                        )}
                       </div>
                     </td>
 
@@ -247,6 +245,8 @@ const updateVoucher = async (caseId: string) => {
                             </p>
                             {c.stage3_status === 'paid' ? (
                                <span className="text-[9px] font-black text-green-600 uppercase">Paid ✅</span>
+                            ): (
+                               <button onClick={() => adminAction('confirm-stage3', { caseId: c.id })} className="text-[9px] font-black text-purple-600 underline">Confirm S3 Pay</button>
                             )}
                          </div>
                        ) : <span className="text-xs text-slate-300 italic">No Request</span>}
@@ -257,7 +257,7 @@ const updateVoucher = async (caseId: string) => {
                       {/* 状态 A: 用户刚付完 $100，显示“录入挂号凭证”按钮 */}
                       {c.stage2_status === 'paid' && (
                         <button 
-                          onClick={() => openVoucherModal(c)} // 触发你之前写的弹窗
+                          onClick={() => openVoucherModal(c.id)} // 触发你之前写的弹窗
                           className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:bg-green-700 shadow-lg"
                         >
                           录入挂号凭证
