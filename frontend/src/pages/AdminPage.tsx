@@ -28,7 +28,7 @@ export default function AdminPage() {
 
   // 👇 补上这个方法
  const openVoucherModal = (id: string) => {
-  setCurrentCaseId(id); // 1. 记住当前点击的订单 ID
+  setCurrentOrderId(id); // 1. 记住当前点击的订单 ID
   setVoucherForm({ voucher_id: '', image_url: '' }); // 2. 清空表单（防止看到上一个人的数据）
   setShowVoucherModal(true); // 3. 打开弹窗
 };
