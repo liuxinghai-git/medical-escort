@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [showVoucherModal, setShowVoucherModal] = useState(false); // 确保这行存在
   const[currentOrderId, setCurrentOrderId] = useState<string | null>(null); 
+  const [voucherForm, setVoucherForm] = useState({ voucher_id: '', image_url: '' });
 
   // 元数据管理状态
   const [newCity, setNewCity] = useState('');
