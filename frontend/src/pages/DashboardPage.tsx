@@ -155,6 +155,7 @@ export default function DashboardPage() {
                      <div className="bg-white/20 p-4 rounded-xl text-xs font-mono mb-4">
                        <p className="opacity-70 uppercase font-bold">Voucher ID</p>
                        <p className="font-bold">{caseData.registration_voucher_id}</p>
+                       <a href={caseData.image_url} rel="noreferrer" ></a>
                      </div>
                   </div>
                 )}
