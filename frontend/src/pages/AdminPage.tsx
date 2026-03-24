@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [hospitalMeta, setHospitalMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showVoucherModal, setShowVoucherModal] = useState(false); // 确保这行存在
+  const[currentOrderId, setCurrentOrderId] = useState<string | null>(null); 
 
   // 元数据管理状态
   const [newCity, setNewCity] = useState('');
@@ -246,8 +247,6 @@ const updateVoucher = async (caseId: string) => {
                             </p>
                             {c.stage3_status === 'paid' ? (
                                <span className="text-[9px] font-black text-green-600 uppercase">Paid ✅</span>
-                            ) : (
-                               <button onClick={() => adminAction('confirm-stage3', { caseId: c.id })} className="text-[9px] font-black text-purple-600 underline">Confirm S3 Pay</button>
                             )}
                          </div>
                        ) : <span className="text-xs text-slate-300 italic">No Request</span>}
