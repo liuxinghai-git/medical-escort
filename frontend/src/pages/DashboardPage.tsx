@@ -122,7 +122,7 @@ export default function DashboardPage() {
                      <p className="text-blue-100 text-sm mb-6">Deposit $100 to start registration.</p>
                      <PayPalButtons 
                        createOrder={(_, actions) => actions.order.create({
-                         intent: "CAPTURE",
+                         intent: "AUTHORIZE",
                           purchase_units: [{ 
                           amount: { currency_code: "USD", value: "100.00" }, 
                           custom_id: `${id}:stage_2`,
