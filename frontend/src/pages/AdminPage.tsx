@@ -361,12 +361,51 @@ const updateVoucher = async (caseId: string) => {
             placeholder="Voucher ID (挂号凭证号)" 
             className="w-full border-2 p-3 rounded-xl mb-3 outline-none" 
           />
-          <input 
-            value={voucherForm.image_url}
-            onChange={(e) => setVoucherForm({...voucherForm, image_url: e.target.value})}
-            placeholder="Image URL (凭证图片链接)" 
-            className="w-full border-2 p-3 rounded-xl mb-6 outline-none" 
-          />
+          {/* 替换掉原来的 Image URL 输入框 */}
+          <div className="mb-6">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Upload Voucher Image (上传凭证截图)
+            </label>
+            
+            {/* 如果已经有预览图，显示预览 */}
+            {voucherForm.image_url ? (
+              <div className="relative w-full h-40 mb-3 border-2 border-gray-200 rounded-xl overflow-hidden">
+                <img 
+                  src={voucherForm.image_url} 
+                  alt="Voucher Preview" 
+                  className="w-full h-full object-contain"
+                />
+                {/* 重新上传按钮 */}
+                <button 
+                  onClick={() => setVoucherForm({...voucherForm, image_url: ''})}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg text-xs"
+                >
+                  移除
+                </button>
+              </div>
+            ) : (
+              {/* 文件选择框 */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // 这里是临时本地预览，正式开发时这里应该调用上传 API
+                    const previewUrl = URL.createObjectURL(file);
+                    setVoucherForm({ ...voucherForm, image_url: previewUrl });
+                    
+                    // ⚠️ 正式逻辑：
+                    // const formData = new FormData();
+                    // formData.append('file', file);
+                    // const res = await uploadToYourServer(formData);
+                    // setVoucherForm({ ...voucherForm, image_url: res.url });
+                  }
+                }}
+                className="w-full border-2 p-2 rounded-xl outline-none text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            )}
+          </div>
           <div className="flex gap-3">
             <button onClick={() => setShowVoucherModal(false)} className="flex-1 py-3 text-slate-500 font-bold">Cancel</button>
             <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
