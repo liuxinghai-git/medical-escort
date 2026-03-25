@@ -7,7 +7,7 @@ import {
   Loader2, X, MessageCircle, Phone, Mail, Globe 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
-import { supabase } from '../lib/supabase'; // 确保引入你的 supabase 实例
+import { supabase } from '../supabaseClient'; // ✅ 正确的路径
 
 export default function DashboardPage() {
   const { id } = useParams();
