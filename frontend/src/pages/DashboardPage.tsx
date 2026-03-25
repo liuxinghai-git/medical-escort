@@ -57,7 +57,7 @@ export default function DashboardPage() {
         (payload) => {
           console.log('⚡ 数据库发生变化啦！瞬间自动刷新UI', payload);
           // 一旦监听到数据库有变动，立刻重新拉取数据刷新页面
-          fetchCaseData(); 
+          fetchCase(); 
         }
       )
       .subscribe();
