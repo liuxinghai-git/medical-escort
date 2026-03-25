@@ -387,9 +387,43 @@ const updateVoucher = async (caseId: string) => {
                 accept="image/*"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
+                  if (!file) return;
+              
+                  try {
+                    // 1. 先为了用户体验，展示一个本地临时预览图 (之前的代码保留)
                     const previewUrl = URL.createObjectURL(file);
-                    setVoucherForm({ ...voucherForm, image_url: previewUrl });
+                    setVoucherForm({ ...voucherForm, image_url: previewUrl }); 
+                    // 注意：这个时候还不要立刻提交表单！
+              
+                    // 2. 准备上传到 Supabase
+                    // 为了防止重名，给文件生成一个随机名字
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Math.random()}.${fileExt}`;
+                    const filePath = `${fileName}`;
+              
+                    // 3. 执行上传 (存入刚才建的 'vouchers' 桶里)
+                    const { error: uploadError } = await supabase.storage
+                      .from('vouchers')
+                      .upload(filePath, file);
+              
+                    if (uploadError) {
+                      throw uploadError;
+                    }
+              
+                    // 4. 上传成功后，获取这个文件的【永久公开网址】
+                    const { data } = supabase.storage
+                      .from('vouchers')
+                      .getPublicUrl(filePath);
+              
+                    // 5. 【关键】用真实的永久网址，替换掉刚才的临时预览网址！
+                    // 这样当你点击“Confirm(确定)”提交表单时，存进数据库的就是真实链接了
+                    setVoucherForm({ ...voucherForm, image_url: data.publicUrl });
+                    
+                    console.log("上传成功，真实永久链接为:", data.publicUrl);
+              
+                  } catch (error) {
+                    console.error("图片上传失败:", error);
+                    alert("上传失败，请重试");
                   }
                 }}
                 className="w-full border-2 p-2 rounded-xl outline-none text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
