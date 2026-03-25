@@ -43,29 +43,14 @@ export default function DashboardPage() {
 
   useEffect(() => { 
     fetchCase(); 
+    
+    // 2. 设置一个定时器，每隔 5000 毫秒 (5秒) 自动执行一次 fetchCase
+    const intervalId = setInterval(() => {
+      fetchCase();
+    }, 5000);
 
-    // 2. 建立 Supabase 实时监听通道
-    const subscription = supabase
-      .channel('table-db-changes')
-      .on(
-        'postgres_changes',
-        { 
-          event: '*', // 监听所有事件 (INSERT, UPDATE, DELETE)
-          schema: 'public', 
-          table: 'cases' // ⚠️ 换成你数据库里存订单的真实表名！
-        },
-        (payload) => {
-          console.log('⚡ 数据库发生变化啦！瞬间自动刷新UI', payload);
-          // 一旦监听到数据库有变动，立刻重新拉取数据刷新页面
-          fetchCase(); 
-        }
-      )
-      .subscribe();
-
-    // 3. 离开页面时销毁监听通道
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    // 3. 【重要】清理函数：当用户离开这个页面时，关掉定时器
+    return () => clearInterval(intervalId);
   }, [id]);
 
   if (!caseData) return (
