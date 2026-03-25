@@ -7,6 +7,7 @@ import {
   Loader2, X, MessageCircle, Phone, Mail, Globe 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
+import { supabase } from '../lib/supabase'; // 确保引入你的 supabase 实例
 
 export default function DashboardPage() {
   const { id } = useParams();
@@ -40,7 +41,32 @@ export default function DashboardPage() {
     setCaseData(data);
   };
 
-  useEffect(() => { fetchCase(); }, [id]);
+  useEffect(() => { 
+    fetchCase(); 
+
+    // 2. 建立 Supabase 实时监听通道
+    const subscription = supabase
+      .channel('table-db-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', // 监听所有事件 (INSERT, UPDATE, DELETE)
+          schema: 'public', 
+          table: 'cases' // ⚠️ 换成你数据库里存订单的真实表名！
+        },
+        (payload) => {
+          console.log('⚡ 数据库发生变化啦！瞬间自动刷新UI', payload);
+          // 一旦监听到数据库有变动，立刻重新拉取数据刷新页面
+          fetchCaseData(); 
+        }
+      )
+      .subscribe();
+
+    // 3. 离开页面时销毁监听通道
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [id]);
 
   if (!caseData) return (
     <div className="h-screen flex items-center justify-center bg-slate-50">
