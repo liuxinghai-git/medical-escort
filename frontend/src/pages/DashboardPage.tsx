@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [{ options, isPending }, dispatch] = usePayPalScriptReducer();
   const [caseData, setCaseData] = useState<any>(null);
   const [isSupportOpen, setIsSupportOpen] = useState(false); // 控制联系弹窗
+  const[enlargedImage, setEnlargedImage] = useState<string | null>(null);
   
   const [showPayStep3, setShowPayStep3] = useState(false);
   const [compForm, setCompForm] = useState({ contact: '', gender: 'No Preference', duration: 'morning' });
@@ -155,7 +156,17 @@ export default function DashboardPage() {
                      <div className="bg-white/20 p-4 rounded-xl text-xs font-mono mb-4">
                        <p className="opacity-70 uppercase font-bold">Voucher ID</p>
                        <p className="font-bold">{caseData.registration_voucher_id}</p>
-                       <a href={caseData.image_url} rel="noreferrer" ></a>
+                       {caseData.image_url && (
+                          <div className="mt-4">
+                            <p className="opacity-70 uppercase font-bold text-xs mb-2">Voucher Image</p>
+                            <img 
+                              src={caseData.image_url} 
+                              alt="Registration Voucher" 
+                              className="w-full max-h-40 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-white/20 shadow-sm"
+                              onClick={() => setEnlargedImage(caseData.image_url)}
+                            />
+                          </div>
+                        )}
                      </div>
                   </div>
                 )}
@@ -277,6 +288,38 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+       {/* 👇 放大图片的弹窗组件 (放在最外层 div 结束前) */}
+          {enlargedImage && (
+            <div 
+              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setEnlargedImage(null)} // 点击黑色背景关闭
+            >
+              <div className="relative max-w-4xl w-full h-full flex flex-col items-center justify-center">
+                {/* 右上角关闭按钮 */}
+                <button 
+                  className="absolute top-4 right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full"
+                  onClick={() => setEnlargedImage(null)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                
+                {/* 放大后的高清图片 */}
+                <img 
+                  src={enlargedImage} 
+                  alt="Enlarged Voucher" 
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                  onClick={(e) => e.stopPropagation()} // 阻止点击图片时关闭弹窗
+                />
+              </div>
+            </div>
+          )}
+    
+        </div> // 这是你组件最外层的那个闭合标签
+      );
+    }
     </div>
   );
 }
