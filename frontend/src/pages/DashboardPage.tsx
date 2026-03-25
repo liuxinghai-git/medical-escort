@@ -156,14 +156,14 @@ export default function DashboardPage() {
                      <div className="bg-white/20 p-4 rounded-xl text-xs font-mono mb-4">
                        <p className="opacity-70 uppercase font-bold">Voucher ID</p>
                        <p className="font-bold">{caseData.registration_voucher_id}</p>
-                       {caseData.image_url && (
+                       {caseData.registration_image_url && (
                           <div className="mt-4">
                             <p className="opacity-70 uppercase font-bold text-xs mb-2">Voucher Image</p>
                             <img 
-                              src={caseData.image_url} 
+                              src={caseData.registration_image_url} 
                               alt="Registration Voucher" 
                               className="w-full max-h-40 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-white/20 shadow-sm"
-                              onClick={() => setEnlargedImage(caseData.image_url)}
+                              onClick={() => setEnlargedImage(caseData.registration_image_url)}
                             />
                           </div>
                         )}
