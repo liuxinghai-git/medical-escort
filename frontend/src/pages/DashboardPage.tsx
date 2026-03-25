@@ -316,10 +316,6 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-    
-        </div> // 这是你组件最外层的那个闭合标签
-      );
-    }
     </div>
   );
 }
