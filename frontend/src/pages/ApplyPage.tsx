@@ -297,7 +297,51 @@ export default function ApplyPage() {
                     custom_id: `${caseId}:stage_1` 
                   }]
                 })}
-                onApprove={async () => navigate(`/dashboard/${caseId}`)}
+                onApprove={async (_data, actions) => 
+                 try {
+                   if (!actions.order) return;
+                   
+                   // 1. 先向 PayPal 确认把钱扣下来
+                   const captureResult = await actions.order.capture();
+                   
+                   if (captureResult.status === 'COMPLETED') {
+                     console.log("✅ 支付彻底成功！现在开始写入数据库...");
+     
+                     // 2. 钱到账了，现在才把数据 Insert 进 Supabase 的 case 表！
+                     const { _data: newCase, error } = await supabase
+                       .from('cases')
+                       .insert([
+                         { 
+                           patient_name: formData.patient_name,
+                           symptoms: formData.symptoms,
+                           // 把 PayPal 的交易流水号存进去，方便以后对账
+                           stage1_txn_id: captureResult.id, 
+                           stage1_status: 'paid' 
+                         }
+                       ])
+                       .select()
+                       .single();
+
+                if (error) throw error;
+                 
+                 navigate(`/dashboard/${caseId}`)
+                  }
+                } catch (err) {
+                 console.error("处理订单失败:", err);
+                 alert("Although the payment was successful, the system failed to process it. Please contact customer service.");
+               }
+               // 步骤 C：如果用户中途关掉弹窗，或者卡里没钱支付失败
+              onError={(err) => {
+                console.error("❌ 支付失败或发生错误:", err);
+                // 给用户一个提示，什么都不做，绝对不插入数据库！
+                alert("Payment failed or was cancelled. Your case has not been created.");
+              }}
+              
+              onCancel={() => {
+                // 用户主动关掉 PayPal 弹窗
+                console.log("⚠️ 用户取消了支付");
+                // 什么都不做，留在当前页面
+              }}
               />
               <p className="mt-8 text-[10px] text-slate-400 leading-loose">
                 By paying, you agree to our Terms of Service. <br/>
