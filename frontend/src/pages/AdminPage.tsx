@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [showVoucherModal, setShowVoucherModal] = useState(false); // 确保这行存在
   const[currentOrderId, setCurrentOrderId] = useState<string | null>(null); 
   const [voucherForm, setVoucherForm] = useState({ voucher_id: '', image_url: '' });
+  const [isUploading, setIsUploading] = useState(false);
 
   // 元数据管理状态
   const [newCity, setNewCity] = useState('');
@@ -390,6 +391,7 @@ const updateVoucher = async (caseId: string) => {
                   if (!file) return;
               
                   try {
+                    setIsUploading(true); // 🚀 开始上传，禁用按钮
                     // 1. 先为了用户体验，展示一个本地临时预览图 (之前的代码保留)
                     const previewUrl = URL.createObjectURL(file);
                     setVoucherForm({ ...voucherForm, image_url: previewUrl }); 
@@ -424,6 +426,8 @@ const updateVoucher = async (caseId: string) => {
                   } catch (error) {
                     console.error("图片上传失败:", error);
                     alert("上传失败，请重试");
+                  } finally{
+                    setIsUploading(false); // ✅ 上传完成（成功或失败），结束禁用状态
                   }
                 }}
                 className="w-full border-2 p-2 rounded-xl outline-none text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -432,7 +436,23 @@ const updateVoucher = async (caseId: string) => {
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowVoucherModal(false)} className="flex-1 py-3 text-slate-500 font-bold">Cancel</button>
-            <button onClick={submitVoucher} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Confirm</button>
+            <button 
+                onClick={submitVoucher} 
+                // 👇 关键逻辑：正在上传中，或者还没拿到正式链接，或者没填ID，就禁用按钮
+                disabled={isUploading || !voucherForm.image_url || voucherForm.image_url.startsWith('blob:') || !voucherForm.voucher_id}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                  (isUploading || !voucherForm.image_url || voucherForm.image_url.startsWith('blob:'))
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                }`}
+              >
+                {isUploading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Uploading...
+                  </span>
+                ) : 'Confirm'}
+              </button>
           </div>
         </div>
       </div>
