@@ -107,14 +107,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 2. 进度可视化 */}
+          {/* 2. 进度可视化 captured*/}
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
              <h3 className="font-bold text-slate-800 mb-8 text-lg flex items-center">
                <Globe className="w-5 h-5 mr-2 text-blue-500"/> Service Timeline
              </h3>
              <div className="space-y-0">
                 <Step status={caseData.stage1_paid ? 'done' : 'current'} title="Phase 1: Coordination" desc="Specialist matching & medical translation." />
-                <Step status={caseData.stage2_status === 'captured' ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
+                <Step status={caseData.stage2_status === 'confirmed' ? 'done' : (caseData.stage1_paid ? 'current' : 'pending')} title="Phase 2: Slot Booking (Escrow)" desc="Registration securing via hospital internal systems." />
                 <Step status={caseData.stage3_status === 'paid' ? 'done' : (caseData.stage2_status === 'captured' ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
              </div>
           </div>
