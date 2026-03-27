@@ -324,7 +324,7 @@ export default function ApplyPage() {
 
                 if (error) throw error;
                  
-                 navigate(`/dashboard/${caseId}`)
+                 navigate(`/dashboard/${newCase.id}`)
                   }
                 } catch (err) {
                  console.error("处理订单失败:", err);
