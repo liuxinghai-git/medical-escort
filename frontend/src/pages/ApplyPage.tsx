@@ -297,7 +297,7 @@ export default function ApplyPage() {
                     custom_id: `${caseId}:stage_1` 
                   }]
                 })}
-                onApprove={async (_data, actions) => 
+                onApprove={async (_data, actions) => {
                  try {
                    if (!actions.order) return;
                    
