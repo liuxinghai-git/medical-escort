@@ -112,12 +112,11 @@ export default function ApplyPage() {
    //   } else {
    //     throw new Error("Failed to create case");
     //  }
-   // } catch (e: any) {
-   //   alert("Submission failed: " + e.message);
-   // } finally {
-    //  setIsUploading(false);
-  //  }
-     setIsUploading(false);
+    } catch (e: any) {
+      alert("Submission failed: " + e.message);
+   } finally {
+      setIsUploading(false);
+   }
   };
 
   if (checking || !hospitalMeta) {
