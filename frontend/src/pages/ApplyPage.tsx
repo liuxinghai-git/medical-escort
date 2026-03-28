@@ -31,6 +31,8 @@ export default function ApplyPage() {
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [caseId, setCaseId] = useState<string | null>(null);
+  const [isReadyToPay, setIsReadyToPay] = useState(false); // 新增状态控制 UI 切换
+  const [passportUrl, setPassportUrl] = useState("");
 
   // 1. 初始化：获取数据库中的动态城市和医院列表
   useEffect(() => {
@@ -112,6 +114,8 @@ export default function ApplyPage() {
    //   } else {
    //     throw new Error("Failed to create case");
     //  }
+      setPassportUrl(data.publicUrl);
+      setIsReadyToPay(true); // 切换显示 PayPal 按钮
     } catch (e: any) {
       alert("Submission failed: " + e.message);
    } finally {
@@ -153,7 +157,7 @@ export default function ApplyPage() {
             </div>
           </div>
 
-          {!caseId ? (
+          {!isReadyToPay ? (
             <div className="p-8 space-y-8">
               {/* 1. 城市选择 (药丸样式) */}
               <div>
@@ -307,15 +311,11 @@ export default function ApplyPage() {
                    if (captureResult.status === 'COMPLETED') {
                      console.log("✅ 支付彻底成功！现在开始写入数据库...");
      
-                      const { data: { publicUrl } } = supabase.storage
-                      .from('passports')
-                      .getPublicUrl(filePath);
-              
                     // B. 调用后端接口创建订单
                     const res = await fetch(`${API_BASE_URL}/api/cases`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ...form, passport_url: publicUrl })
+                      body: JSON.stringify({ ...form, passport_url: passportUrl })
                     });
                     const data = await res.json();
                     
