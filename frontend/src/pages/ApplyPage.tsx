@@ -95,28 +95,29 @@ export default function ApplyPage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('passports')
-        .getPublicUrl(filePath);
+//      const { data: { publicUrl } } = supabase.storage
+ //       .from('passports')
+ //       .getPublicUrl(filePath);
 
       // B. 调用后端接口创建订单
-      const res = await fetch(`${API_BASE_URL}/api/cases`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, passport_url: publicUrl })
-      });
-      const data = await res.json();
+  //    const res = await fetch(`${API_BASE_URL}/api/cases`, {
+  //      method: 'POST',
+//headers: { 'Content-Type': 'application/json' },
+//        body: JSON.stringify({ ...form, passport_url: publicUrl })
+ //     });
+ //     const data = await res.json();
       
-      if (data.caseId) {
-        setCaseId(data.caseId);
-      } else {
-        throw new Error("Failed to create case");
-      }
-    } catch (e: any) {
-      alert("Submission failed: " + e.message);
-    } finally {
-      setIsUploading(false);
-    }
+   //   if (data.caseId) {
+   //     setCaseId(data.caseId);
+   //   } else {
+   //     throw new Error("Failed to create case");
+    //  }
+   // } catch (e: any) {
+   //   alert("Submission failed: " + e.message);
+   // } finally {
+    //  setIsUploading(false);
+  //  }
+     setIsUploading(false);
   };
 
   if (checking || !hospitalMeta) {
@@ -307,26 +308,30 @@ export default function ApplyPage() {
                    if (captureResult.status === 'COMPLETED') {
                      console.log("✅ 支付彻底成功！现在开始写入数据库...");
      
-                     // 2. 钱到账了，现在才把数据 Insert 进 Supabase 的 case 表！
-                     const { data: newCase, error } = await supabase
-                       .from('cases')
-                       .insert([
-                         { 
-                           patient_name: form.patient_name,
-                           symptoms: form.symptoms,
-                           // 把 PayPal 的交易流水号存进去，方便以后对账
-                           stage1_txn_id: captureResult.id, 
-                           stage1_status: 'paid' 
-                         }
-                       ])
-                       .select()
-                       .single();
-
-                if (error) throw error;
+                      const { data: { publicUrl } } = supabase.storage
+                      .from('passports')
+                      .getPublicUrl(filePath);
+              
+                    // B. 调用后端接口创建订单
+                    const res = await fetch(`${API_BASE_URL}/api/cases`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...form, passport_url: publicUrl })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.caseId) {
+                      setCaseId(data.caseId);
+                    } else {
+                      throw new Error("Failed to create case");
+                    }
+                  } catch (e: any) {
+                    alert("Submission failed: " + e.message);
+                  } 
                  
                  // 3. 拿到数据库生成的真实 ID 后跳转
-                if (newCase) {
-                  navigate(`/dashboard/${newCase.id}`);
+                if (caseId) {
+                  navigate(`/dashboard/${caseId}`);
                 }
                   }
                 } catch (err) {
