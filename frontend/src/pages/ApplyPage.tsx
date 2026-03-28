@@ -114,7 +114,7 @@ export default function ApplyPage() {
    //   } else {
    //     throw new Error("Failed to create case");
     //  }
-      setPassportUrl(data.publicUrl);
+      setPassportUrl(publicUrl);
       setIsReadyToPay(true); // 切换显示 PayPal 按钮
     } catch (e: any) {
       alert("Submission failed: " + e.message);
