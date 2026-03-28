@@ -97,9 +97,9 @@ export default function ApplyPage() {
 
       if (uploadError) throw uploadError;
 
-//      const { data: { publicUrl } } = supabase.storage
- //       .from('passports')
- //       .getPublicUrl(filePath);
+      const { data: { publicUrl } } = supabase.storage
+        .from('passports')
+        .getPublicUrl(filePath);
 
       // B. 调用后端接口创建订单
   //    const res = await fetch(`${API_BASE_URL}/api/cases`, {
