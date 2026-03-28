@@ -324,9 +324,6 @@ export default function ApplyPage() {
                     } else {
                       throw new Error("Failed to create case");
                     }
-                  } catch (e: any) {
-                    alert("Submission failed: " + e.message);
-                  } 
                  
                  // 3. 拿到数据库生成的真实 ID 后跳转
                 if (caseId) {
