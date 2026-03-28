@@ -312,8 +312,8 @@ export default function ApplyPage() {
                        .from('cases')
                        .insert([
                          { 
-                           patient_name: formData.patient_name,
-                           symptoms: formData.symptoms,
+                           patient_name: form.patient_name,
+                           symptoms: form.symptoms,
                            // 把 PayPal 的交易流水号存进去，方便以后对账
                            stage1_txn_id: captureResult.id, 
                            stage1_status: 'paid' 
