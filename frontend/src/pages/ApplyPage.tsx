@@ -326,11 +326,14 @@ export default function ApplyPage() {
                       throw new Error("Failed to create case");
                     }
                  
-                 // 3. 拿到数据库生成的真实 ID 后跳转
-                if (data.caseId) {
-                  console.log("拿到数据库生成的真实 ID 后跳转"+data.caseId)
-                  navigate(`/dashboard/${data.caseId}`);
-                }
+                 if (data.caseId) {
+                   console.log("🚀 准备跳转到 Dashboard，ID:", data.caseId);
+                   // ✅ 这里一定要用反引号（键盘 Esc 下面那个键）
+                   navigate(`/dashboard/${data.caseId}`);
+                 } else {
+                   console.error("❌ 后端没有返回 caseId", result);
+                   alert("System error: Case ID not generated.");
+                 }
                   }
                 } catch (err) {
                  console.error("处理订单失败:", err);
