@@ -321,13 +321,15 @@ export default function ApplyPage() {
                     
                     if (data.caseId) {
                       setCaseId(data.caseId);
+                      console.log("✅ 支付彻底成功！现在开始写入数据库..."+data.caseId)
                     } else {
                       throw new Error("Failed to create case");
                     }
                  
                  // 3. 拿到数据库生成的真实 ID 后跳转
-                if (caseId) {
-                  navigate(`/dashboard/${caseId}`);
+                if (data.caseId) {
+                  console.log("拿到数据库生成的真实 ID 后跳转"+data.caseId)
+                  navigate(`/dashboard/${data.caseId}`);
                 }
                   }
                 } catch (err) {
