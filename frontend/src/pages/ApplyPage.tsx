@@ -318,22 +318,15 @@ export default function ApplyPage() {
                       body: JSON.stringify({ ...form, passport_url: passportUrl })
                     });
                     const data = await res.json();
-                    
+                  
                     if (data.caseId) {
-                      setCaseId(data.caseId);
-                      console.log("✅ 支付彻底成功！现在开始写入数据库..."+data.caseId)
+                      console.log("🚀 准备跳转到 Dashboard，ID:", data.caseId);
+                      // ✅ 这里一定要用反引号（键盘 Esc 下面那个键）
+                      navigate(`/dashboard/${data.caseId}`);
                     } else {
-                      throw new Error("Failed to create case");
+                      console.error("❌ 后端没有返回 caseId", result);
+                      alert("System error: Case ID not generated.");
                     }
-                 
-                 if (data.caseId) {
-                   console.log("🚀 准备跳转到 Dashboard，ID:", data.caseId);
-                   // ✅ 这里一定要用反引号（键盘 Esc 下面那个键）
-                   navigate(`/dashboard/${data.caseId}`);
-                 } else {
-                   console.error("❌ 后端没有返回 caseId", result);
-                   alert("System error: Case ID not generated.");
-                 }
                   }
                 } catch (err) {
                  console.error("处理订单失败:", err);
