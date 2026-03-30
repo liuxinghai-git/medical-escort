@@ -4,11 +4,10 @@ import PricingSection from './PricingSection';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, Activity, MapPin, ChevronRight, 
-  Globe, CheckCircle2, X, Hospital, 
+  Globe, CheckCircle2, X, Hospital, Zap, Globe2, Clock,
   Lock, MousePointerClick, FileSearch, UserCheck, Loader2
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
-import { Clock, Globe2, ShieldCheck, Zap } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
