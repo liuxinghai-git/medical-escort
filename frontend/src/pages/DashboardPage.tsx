@@ -240,6 +240,44 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* --- 联系预约提示卡片 --- */}
+          <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 mb-4 shadow-sm animate-in fade-in slide-in-from-right-4 duration-1000">
+            <div className="flex items-center gap-3 mb-3 text-amber-700">
+              <div className="bg-amber-500 p-1.5 rounded-lg">
+                <Clock size={18} className="text-white animate-pulse" />
+              </div>
+              <span className="font-black text-sm uppercase tracking-tighter">Next Step: Case Liaison</span>
+            </div>
+            
+            <p className="text-slate-600 text-[13px] leading-relaxed mb-4">
+              Your payment is verified. Our medical coordinator will reach out via your provided contact method (WhatsApp/WeChat). 
+            </p>
+          
+            <div className="bg-white/60 rounded-2xl p-4 border border-amber-200/50">
+              <h4 className="text-[11px] font-bold text-amber-800 uppercase mb-2 flex items-center gap-1">
+                 Daily Contact Window
+              </h4>
+              <div className="space-y-2">
+                 <div className="flex justify-between items-center border-b border-amber-100 pb-1">
+                    <span className="text-[11px] text-slate-500 font-medium">Beijing (CST)</span>
+                    <span className="text-[12px] font-black text-slate-800 tracking-tighter">20:00 - 00:00</span>
+                 </div>
+                 <div className="flex justify-between items-center border-b border-amber-100 pb-1">
+                    <span className="text-[11px] text-slate-500 font-medium">New York (EST)</span>
+                    <span className="text-[12px] font-black text-slate-800 tracking-tighter">08:00 - 12:00</span>
+                 </div>
+                 <div className="flex justify-between items-center">
+                    <span className="text-[11px] text-slate-500 font-medium">London (GMT)</span>
+                    <span className="text-[12px] font-black text-slate-800 tracking-tighter">12:00 - 16:00</span>
+                 </div>
+              </div>
+            </div>
+          
+            <p className="text-[10px] text-slate-400 mt-4 italic leading-tight">
+              * If you are not contacted within 15 minutes, we will synchronize with you during the next window.
+            </p>
+          </div>
+          
           {/* 🌐 多样化联系方式卡片 */}
           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
              <h4 className="font-bold text-slate-800 mb-2">Patient Support</h4>
