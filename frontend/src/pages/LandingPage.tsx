@@ -8,6 +8,7 @@ import {
   Lock, MousePointerClick, FileSearch, UserCheck, Loader2
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
+import { Clock, Globe2, ShieldCheck, Zap } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -77,6 +78,91 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="relative -mt-8 mb-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-slate-100 overflow-hidden">
+            <div className="flex flex-col md:flex-row">
+              
+              {/* 左侧：文字说明 */}
+              <div className="flex-[1.2] p-8 md:p-12 bg-gradient-to-br from-white to-slate-50">
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest mb-6">
+                  <Globe2 size={14} className="animate-spin-slow" /> Global Response Protocol
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight leading-tight">
+                  Synchronized Care, <br />
+                  <span className="text-blue-600">Across All Time Zones.</span>
+                </h2>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-md">
+                  To ensure elite service for our international patients, our medical coordinators process applications during fixed daily windows. We synchronize with your time zone to provide a seamless consultation experience.
+                </p>
+                
+                <div className="flex items-center gap-6 mt-8">
+                  <div className="flex items-center gap-2">
+                    <Zap size={16} className="text-amber-500" />
+                    <span className="text-xs font-bold text-slate-700">24h Max Turnaround</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-green-500" />
+                    <span className="text-xs font-bold text-slate-700">Secure Liaison</span>
+                  </div>
+                </div>
+              </div>
+      
+              {/* 右侧：时区时间表 (深色专业风格) */}
+              <div className="flex-1 bg-slate-900 p-8 md:p-12 text-white relative">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Clock size={120} />
+                </div>
+                
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">
+                  Daily Synchronization Windows
+                </h4>
+      
+                <div className="space-y-6 relative z-10">
+                  {/* 北京 */}
+                  <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase mb-1">China Standard (CST)</p>
+                      <p className="text-lg font-light">Beijing / Shanghai</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-blue-400">20:00 - 00:00</span>
+                    </div>
+                  </div>
+      
+                  {/* 纽约 */}
+                  <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase mb-1">Eastern Time (EST)</p>
+                      <p className="text-lg font-light">New York / Toronto</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-blue-400">08:00 - 12:00</span>
+                    </div>
+                  </div>
+      
+                  {/* 伦敦 */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-xs text-slate-400 font-bold uppercase mb-1">Greenwich Mean (GMT)</p>
+                      <p className="text-lg font-light">London / Lisbon</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-blue-400">12:00 - 16:00</span>
+                    </div>
+                  </div>
+                </div>
+      
+                <p className="mt-8 text-[10px] text-slate-500 italic leading-relaxed">
+                  * Initial assessment starts immediately. Our coordinator will contact you via WhatsApp/WeChat during the next available window above.
+                </p>
+              </div>
+      
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {/* --- 2. 动态城市网格 --- */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
