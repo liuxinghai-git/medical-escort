@@ -20,6 +20,7 @@ export default function DashboardPage() {
   
   const [showPayStep3, setShowPayStep3] = useState(false);
   const [loadingHospital, setLoadingHospital] = useState(false);
+  const [hospitalInfo, setHospitalInfo] = useState(false);
   const [compForm, setCompForm] = useState({ contact: '', gender: 'No Preference', duration: 'morning' });
 
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
