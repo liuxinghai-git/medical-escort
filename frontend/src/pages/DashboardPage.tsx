@@ -22,6 +22,29 @@ export default function DashboardPage() {
 
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
 
+  const fetchHospitalDetails = async (hospitalName: string) => {
+	  setLoadingHospital(true);
+	  try {
+		// ⚠️ 注意：这里改成了请求你自己的后端 API
+		const res = await fetch(`${API_BASE_URL}/api/hospitals/insight?name=${encodeURIComponent(hospitalName)}`);
+		const aiData = await res.json();
+
+		if (aiData && !aiData.error) {
+		  setHospitalInfo({
+			name: hospitalName,
+			rank: aiData.rank,
+			founded: aiData.founded,
+			sub_title: aiData.sub_title,
+			description: aiData.description
+		  });
+		}
+	  } catch (err) {
+		console.error("Fetch Error:", err);
+	  } finally {
+		setLoadingHospital(false);
+	  }
+	};
+
   // 1. 动态切换 PayPal 脚本模式 (intent)
   useEffect(() => {
     if (!caseData) return;
