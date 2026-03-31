@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { createClient } from '@supabase/supabase-js'
+import { generateHospitalInsight } from './services/geminiService';
 
 type Bindings = { SUPABASE_URL: string; SUPABASE_SERVICE_KEY: string; PAYPAL_WEBHOOK_ID: string }
 const app = new Hono<{ Bindings: Bindings }>()
@@ -229,5 +230,84 @@ app.post('/api/admin/meta/hospitals', async (c) => {
   const { error } = await supabase.from('dim_hospitals').insert([{ city_id: city.id, name: hospitalName }])
   return error ? c.json(error, 400) : c.json({ status: 'success' })
 })
+
+
+app.get('/api/hospitals/insight', async (c) => {
+  const name = c.req.query('name');
+  
+  // 1. 基础校验
+  if (!name) {
+    return c.json({ error: "Hospital name is required" }, 400);
+  }
+
+  // 这里的 supabase 实例建议通过 env 或者在外部初始化
+  // 假设你已经定义了获取 supabase 客户端的方法
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY);
+
+  try {
+    console.log(`🔎 Processing request for: ${name}`);
+
+    // 2. 第一步：先查询数据库是否已有该医院的完整信息
+    const { data: existingHospital, error: fetchError } = await supabase
+      .from('dim_hospitals')
+      .select('*')
+      .eq('name', name)
+      .maybeSingle();
+
+    // 如果库里已经有简介（description 不为空），直接返回，省下 AI 的钱
+    if (existingHospital && existingHospital.description) {
+      console.log('✅ Found in database, skipping AI.');
+      return c.json({
+        ...existingHospital,
+        source: 'database'
+      });
+    }
+
+    // 3. 第二步：如果库里没有，则调用 Gemini AI 生成
+    console.log('🤖 Database empty or incomplete. Calling Gemini AI...');
+    const insight = await generateHospitalInsight(name, c.env);
+
+    if (!insight) {
+      return c.json({ error: "AI failed to generate content for this hospital" }, 500);
+    }
+
+    // 4. 第三步：将 AI 生成的结果插入或更新到数据库 (Upsert)
+    // 使用 name 作为冲突判断依据，如果已存在则更新字段
+    const hospitalData = {
+      name: name,
+      rank: insight.rank,
+      founded: insight.founded,
+      sub_title: insight.sub_title,
+      description: insight.description,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: savedData, error: upsertError } = await supabase
+      .from('dim_hospitals')
+      .upsert(hospitalData, { onConflict: 'name' }) 
+      .select()
+      .single();
+
+    if (upsertError) {
+      console.error('❌ Database storage error:', upsertError);
+      // 即便存库失败，我们也把 AI 结果先返回给用户，保证前端不白屏
+      return c.json({ ...hospitalData, source: 'ai_only_fallback' });
+    }
+
+    // 5. 成功返回
+    console.log('🎉 Successfully generated and stored insight.');
+    return c.json({
+      ...savedData,
+      source: 'ai_generated'
+    });
+
+  } catch (error: any) {
+    console.error('💥 Fatal error in insight endpoint:', error.message);
+    return c.json({ 
+      error: "Internal Server Error", 
+      details: error.message 
+    }, 500);
+  }
+});
 
 export default app
