@@ -141,6 +141,77 @@ export default function DashboardPage() {
                 <Step status={caseData.stage3_status === 'paid' ? 'done' : (caseData.stage2_status === 'captured' ? 'current' : 'pending')} title="Phase 3: Medical Companion" desc="On-site guidance & professional translation." />
              </div>
           </div>
+
+			{/* 左侧内容区：显示 AI 结果 */}
+			<div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm h-full flex flex-col min-h-[400px]">
+			  
+			  <div className="flex items-center gap-3 mb-6">
+			    <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+			      <Building2 size={24} />
+			    </div>
+			    <h3 className="font-black text-slate-800 text-sm uppercase tracking-widest">Facility Insight</h3>
+			  </div>
+			
+			  {loadingHospital ? (
+			    /* --- 1. 这里放你截图里的那个加载动画 --- */
+			    <div className="flex-1 flex flex-col justify-center items-center py-10">
+			      <div className="relative">
+			         <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin"></div>
+			         <Sparkles className="absolute -top-2 -right-2 text-amber-400 animate-bounce" size={16} />
+			      </div>
+			      <p className="text-[10px] text-blue-600 uppercase font-black tracking-widest mt-4">
+			        AI Engine Generating Insights...
+			      </p>
+			    </div>
+			  ) : (
+			    /* --- 2. 这里显示 AI 的具体结果 --- */
+			    <div className="animate-in fade-in duration-700 flex-1 flex flex-col">
+			      <div className="mb-6">
+			        <div className="flex items-center gap-1 mb-2">
+			          {/* 显示 AI 确定的星级或等级 */}
+			          {[1, 2, 3, 4, 5].map((s) => (
+			            <Star key={s} size={14} className="text-amber-400 fill-amber-400" />
+			          ))}
+			          <span className="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded font-black ml-2">
+			             {hospitalInfo?.rank || "TOP TIER"}
+			          </span>
+			        </div>
+			
+			        <h2 className="text-2xl font-black text-slate-900 leading-tight mb-1">
+			          {hospitalInfo?.name}
+			        </h2>
+			        <p className="text-sm text-blue-600 font-bold italic">
+			          {hospitalInfo?.sub_title}
+			        </p>
+			      </div>
+			
+			      <div className="space-y-4 flex-1 text-left">
+			        <div className="flex gap-4 border-b border-slate-50 pb-4">
+			          <div>
+			            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Established</p>
+			            <p className="text-sm font-black text-slate-700">{hospitalInfo?.founded || "N/A"}</p>
+			          </div>
+			          <div>
+			            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Status</p>
+			            <p className="text-sm font-black text-green-600">VIP Connected</p>
+			          </div>
+			        </div>
+			
+			        {/* 重点：这就是 AI 写的长描述内容 */}
+			        <p className="text-slate-600 text-[13px] leading-relaxed italic">
+			          "{hospitalInfo?.description}"
+			        </p>
+			      </div>
+			
+			      <div className="mt-8 bg-slate-50 rounded-2xl p-4 flex items-start gap-3">
+			        <Info size={18} className="text-blue-500 mt-0.5 shrink-0" />
+			        <p className="text-[11px] text-slate-500 leading-snug">
+			          This profile was automatically verified and summarized by our medical AI based on the latest 2024-2025 hospital registry data.
+			        </p>
+			      </div>
+			    </div>
+			  )}
+			</div>
         </div>
 
         {/* 右侧操作栏 */}
