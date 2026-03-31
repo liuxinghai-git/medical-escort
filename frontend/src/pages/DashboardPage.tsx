@@ -4,7 +4,8 @@ import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { 
   CheckCircle2, Clock, ShieldCheck, AlertCircle, 
   MapPin, Hospital, User, FileText, ExternalLink, 
-  Loader2, X, MessageCircle, Phone, Mail, Globe 
+  Loader2, X, MessageCircle, Phone, Mail, Globe,
+  Building2, Star, Info, Sparkles 
 } from 'lucide-react';
 import { API_BASE_URL } from '../App';
 import { supabase } from '../supabaseClient'; // ✅ 正确的路径
