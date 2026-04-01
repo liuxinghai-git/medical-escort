@@ -30,7 +30,9 @@ export default function DashboardPage() {
 	  try {
 		// ⚠️ 注意：这里改成了请求你自己的后端 API
 		const res = await fetch(`${API_BASE_URL}/api/hospitals/insight?name=${encodeURIComponent(hospitalName)}`);
+		console.log("hospitalName" + encodeURIComponent(hospitalName));
 		const aiData = await res.json();
+		console.log("aiData" + aiData);
 
 		if (aiData && !aiData.error) {
 		  setHospitalInfo({
