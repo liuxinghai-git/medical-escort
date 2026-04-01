@@ -25,12 +25,24 @@ export const generateHospitalInsight = async (hospitalName: string, env: any) =>
 
   try {
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    // 兼容可能出现的 Markdown 标签
-    const cleanJson = text.replace(/```json|```/g, "").trim();
-    return JSON.parse(cleanJson);
+    const text = await result.response.text();
+    
+    // 调试用：在 Cloudflare 日志里查看原始输出
+    console.log("Raw response from AI:", text);
+
+    // 强力清洗：只保留 JSON 部分
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in AI response");
+    }
+    
+    return JSON.parse(jsonMatch[0]);
   } catch (error) {
-    console.error("Gemini Backend Error:", error);
-    return null;
+    console.error("Gemini API Error details:", error);
+    return { 
+      description: "Service temporarily unavailable. Please try again.",
+      rank: "N/A",
+      founded: "N/A"
+    }; // 返回一个默认对象防止前端崩溃
   }
 };
