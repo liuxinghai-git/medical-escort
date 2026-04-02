@@ -106,14 +106,6 @@ export default function DashboardPage() {
     </div>
   );
 
-  // 在组件内部添加这个 useEffect
-useEffect(() => {
-  // 只有当 caseData 已经加载出来，且 hospital 字段存在时，才去调详情
-  if (caseData && caseData.target_hospital) {
-    fetchHospitalDetails(caseData.target_hospital);
-  }
-}, [caseData]); // 只有当 caseData 变化时，才会执行这个逻辑，完全避免死循环
-
   return (
     // ⬇️ 关键修复：pt-28 确保在手机和电脑上都有足够的顶部间距，避开 Navbar
     <div className="min-h-screen bg-[#F8FAFC] pt-24 md:pt-28 pb-20">
