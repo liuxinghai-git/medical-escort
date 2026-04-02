@@ -232,49 +232,38 @@ app.post('/api/admin/meta/hospitals', async (c) => {
 })
 
 
+// backend/src/index.ts 建议修改片段
+
 app.get('/api/hospitals/insight', async (c) => {
   const name = c.req.query('name');
-  
-  // 1. 基础校验
-  if (!name) {
-    return c.json({ error: "Hospital name is required" }, 400);
-  }
+  if (!name) return c.json({ error: "Name required" }, 400);
 
-  // 这里的 supabase 实例建议通过 env 或者在外部初始化
-  // 假设你已经定义了获取 supabase 客户端的方法
-  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY);
+  // 🚨 修正：确保使用你在 Cloudflare 填写的 SERVICE_KEY
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_KEY);
 
   try {
-    console.log(`🔎 Processing request for: ${name}`);
-
-    // 2. 第一步：先查询数据库是否已有该医院的完整信息
-    const { data: existingHospital, error: fetchError } = await supabase
+    // 1. 先查库
+    const { data: existingHospital } = await supabase
       .from('dim_hospitals')
       .select('*')
       .eq('name', name)
       .maybeSingle();
 
-    // 如果库里已经有简介（description 不为空），直接返回，省下 AI 的钱
     if (existingHospital && existingHospital.description) {
-      console.log('✅ Found in database, skipping AI.');
-      return c.json({
-        ...existingHospital,
-        source: 'database'
-      });
+      return c.json(existingHospital);
     }
 
-    // 3. 第二步：如果库里没有，则调用 Gemini AI 生成
-    console.log('🤖 Database empty or incomplete. Calling Gemini AI...');
+    // 2. 调用 AI
     const insight = await generateHospitalInsight(name, c.env);
-
-    if (!insight) {
-      return c.json({ error: "AI failed to generate content for this hospital" }, 500);
+    
+    if (!insight || !insight.description) {
+      console.error("AI returned empty description");
+      return c.json({ error: "AI failure" }, 500);
     }
 
-    // 4. 第三步：将 AI 生成的结果插入或更新到数据库 (Upsert)
-    // 使用 name 作为冲突判断依据，如果已存在则更新字段
+    // 3. 写入库
     const hospitalData = {
-      name: name,
+      name,
       rank: insight.rank,
       founded: insight.founded,
       sub_title: insight.sub_title,
@@ -282,31 +271,21 @@ app.get('/api/hospitals/insight', async (c) => {
       updated_at: new Date().toISOString()
     };
 
-    const { data: savedData, error: upsertError } = await supabase
+    const { error: upsertError } = await supabase
       .from('dim_hospitals')
-      .upsert(hospitalData, { onConflict: 'name' }) 
-      .select()
-      .single();
+      .upsert(hospitalData, { onConflict: 'name', ignoreDuplicates: false });
 
     if (upsertError) {
-      console.error('❌ Database storage error:', upsertError);
-      // 即便存库失败，我们也把 AI 结果先返回给用户，保证前端不白屏
-      return c.json({ ...hospitalData, source: 'ai_only_fallback' });
+      console.error("Supabase Upsert Error:", upsertError.message);
+      // 即使写入失败，也先把 AI 结果给用户看，保证体验
+      return c.json(hospitalData);
     }
 
-    // 5. 成功返回
-    console.log('🎉 Successfully generated and stored insight.');
-    return c.json({
-      ...savedData,
-      source: 'ai_generated'
-    });
+    return c.json(hospitalData);
 
-  } catch (error: any) {
-    console.error('💥 Fatal error in insight endpoint:', error.message);
-    return c.json({ 
-      error: "Internal Server Error", 
-      details: error.message 
-    }, 500);
+  } catch (err: any) {
+    console.error("Insight Route Error:", err.message);
+    return c.json({ error: err.message }, 500);
   }
 });
 
