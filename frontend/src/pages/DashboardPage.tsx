@@ -25,6 +25,25 @@ export default function DashboardPage() {
 
   const getS3Price = () => compForm.duration === 'morning' ? "120.00" : "200.00";
 
+  // 在组件顶层定义一个 Ref 来记住上次请求过的医院名字
+	const lastFetchedHospital = React.useRef<string | null>(null);
+	
+	useEffect(() => {
+	  // 核心判断：
+	  // 1. 数据存在
+	  // 2. 医院名字存在
+	  // 3. 名字和上次请求的不一样 (防止重复请求和循环)
+	  if (caseData?.target_hospital && lastFetchedHospital.current !== caseData.target_hospital) {
+	    console.log("Fetching details for:", caseData.target_hospital);
+	    
+	    // 更新记录
+	    lastFetchedHospital.current = caseData.target_hospital;
+	    
+	    // 执行请求
+	    fetchHospitalDetails(caseData.target_hospital);
+	  }
+	}, [caseData?.target_hospital]); // 依赖项改为具体的字符串，而不是整个 caseData 对象
+
   const fetchHospitalDetails = async (hospitalName: string) => {
 	  setLoadingHospital(true);
 	  try {
