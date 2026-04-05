@@ -8,7 +8,7 @@ export const generateHospitalInsight = async (hospitalName: string, env: any) =>
     throw new Error("GEMINI_API_KEY is not defined in environment");
   }
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
 
 // 在你的 API 路由里执行这个函数
 // diagnoseGeminiModels(genAI);

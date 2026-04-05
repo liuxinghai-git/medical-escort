@@ -255,33 +255,31 @@ app.get('/api/hospitals/insight', async (c) => {
 
     // 2. 调用 AI
     const insight = await generateHospitalInsight(name, c.env);
+	
+	// 3. 写入库
+	const hospitalData = {
+		  name,
+		  rank: insight.rank,
+		  founded: insight.founded,
+		  sub_title: insight.sub_title,
+		  description: insight.description,
+		  updated_at: new Date().toISOString()
+		};	
     
-    if (!insight || !insight.description) {
-      console.error("AI returned empty description");
-      return c.json({ error: "AI failure" }, 500);
-    }
+    if (insight.rank === 'N/A') {
+      console.log("AI returned empty description");
+       return c.json(hospitalData);
+    } else {
+		const { error: upsertError } = await supabase
+		  .from('dim_hospitals')
+		  .upsert(hospitalData, { onConflict: 'name', ignoreDuplicates: false });
 
-    // 3. 写入库
-    const hospitalData = {
-      name,
-      rank: insight.rank,
-      founded: insight.founded,
-      sub_title: insight.sub_title,
-      description: insight.description,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error: upsertError } = await supabase
-      .from('dim_hospitals')
-      .upsert(hospitalData, { onConflict: 'name', ignoreDuplicates: false });
-
-    if (upsertError) {
-      console.error("Supabase Upsert Error:", upsertError.message);
-      // 即使写入失败，也先把 AI 结果给用户看，保证体验
-      return c.json(hospitalData);
-    }
-
-    return c.json(hospitalData);
+		if (upsertError) {
+		  console.error("Supabase Upsert Error:", upsertError.message);
+		  // 即使写入失败，也先把 AI 结果给用户看，保证体验
+		  return c.json(hospitalData);
+		}
+	}
 
   } catch (err: any) {
     console.error("Insight Route Error:", err.message);
